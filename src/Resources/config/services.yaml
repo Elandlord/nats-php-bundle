@@ -1,0 +1,33 @@
+services:
+  _defaults:
+    autowire: true
+    autoconfigure: true
+    public: false
+
+  _instanceof:
+    Elandlord\NatsPhp\Contract\Handler\EventHandlerInterface:
+      tags: ['nats.event_handler']
+
+  Elandlord\NatsPhpBundle\:
+    resource: '../../*'
+    exclude: '../../{DependencyInjection,Resources,Tests}'
+
+  # Config
+  Elandlord\NatsPhpBundle\Config\NatsConfig:
+    arguments:
+      - '%nats_php.config%'
+
+  # Registry for event handlers
+  Elandlord\NatsPhpBundle\Registry\EventHandlerRegistry:
+    arguments:
+      - !tagged_iterator 'nats.event_handler'
+
+  # Messenger transport factory
+  Elandlord\NatsPhpBundle\Messenger\Transport\NatsTransportFactory:
+    tags:
+      - { name: 'messenger.transport_factory' }
+
+  # Console command
+  Elandlord\NatsPhpBundle\Command\NatsConsumeCommand:
+    tags:
+      - { name: 'console.command' }

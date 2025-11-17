@@ -1,0 +1,19 @@
+{
+  "name": "elandlord/nats-php-bundle",
+  "description": "Symfony bundle for NATS and JetStream using elandlord/nats-php",
+  "type": "symfony-bundle",
+  "license": "MIT",
+  "autoload": {
+    "psr-4": {
+      "Elandlord\\NatsPhpBundle\\": "src/"
+    }
+  },
+  "require": {
+    "php": ">=8.2",
+    "symfony/framework-bundle": "^6.0 || ^7.0",
+    "symfony/messenger": "^6.0 || ^7.0",
+    "elandlord/nats-php": "^1.0",
+    "basis-company/nats": "^1.0",
+    "symfony/console": "^6.4"
+  }
+}
