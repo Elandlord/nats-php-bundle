@@ -1,8 +1,8 @@
 services:
   _defaults:
+    public: true
     autowire: true
     autoconfigure: true
-    public: false
 
   _instanceof:
     Elandlord\NatsPhp\Contract\Handler\EventHandlerInterface:

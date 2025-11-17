@@ -12,6 +12,10 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
+/**
+ * @copyright    2025, Eric Landheer
+ * @license      MIT License
+ */
 class NatsConsumeCommand extends Command
 {
     protected static $defaultName = 'nats:consume';
