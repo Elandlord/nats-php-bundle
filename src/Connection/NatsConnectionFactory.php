@@ -15,18 +15,19 @@ class NatsConnectionFactory
 {
     public function __construct(
         protected NatsConfig $config
-    ) {
+    )
+    {
     }
 
     public function create(): NatsConnection
     {
         $configuration = new Configuration([
-            'host'      => $this->config->getHost(),
-            'port'      => $this->config->getPort(),
-            'user'      => $this->config->getUser(),
-            'pass'      => $this->config->getPass(),
+            'host' => $this->config->getHost(),
+            'port' => $this->config->getPort(),
+            'user' => $this->config->getUser(),
+            'pass' => $this->config->getPass(),
             'reconnect' => $this->config->getReconnect(),
-            'pedantic'  => $this->config->getPedantic(),
+            'pedantic' => $this->config->getPedantic(),
         ]);
 
         $configuration->setDelay($this->config->getDelay());

@@ -20,11 +20,14 @@ class NatsPhpExtension extends Extension
         $config = $this->processConfiguration($configuration, $configs);
 
         $container->setParameter('nats_php.config', $config);
+        $container->setParameter('nats_php.consumer_definitions', $config['consumers'] ?? []);
+        $container->setParameter('nats_php.publisher_definitions', $config['publishers'] ?? []);
 
         $loader = new YamlFileLoader(
             $container,
             new FileLocator(__DIR__ . '/../Resources/config')
         );
+        
         $loader->load('services.yaml');
     }
 

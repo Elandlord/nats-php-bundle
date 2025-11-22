@@ -1,6 +1,6 @@
 services:
   _defaults:
-    public: true
+    public: false
     autowire: true
     autoconfigure: true
 
@@ -10,24 +10,30 @@ services:
 
   Elandlord\NatsPhpBundle\:
     resource: '../../*'
-    exclude: '../../{DependencyInjection,Resources,Tests}'
+    exclude:
+      - '../../DependencyInjection/'
+      - '../../Resources/'
+      - '../../Tests/'
 
-  # Config
   Elandlord\NatsPhpBundle\Config\NatsConfig:
     arguments:
       - '%nats_php.config%'
 
-  # Registry for event handlers
   Elandlord\NatsPhpBundle\Registry\EventHandlerRegistry:
     arguments:
       - !tagged_iterator 'nats.event_handler'
 
-  # Messenger transport factory
+  Elandlord\NatsPhpBundle\Registry\ConsumerRegistry:
+    arguments:
+      - '%nats_php.consumer_definitions%'
+
+  Elandlord\NatsPhpBundle\Consumer\SymfonyEventConsumerFactory: ~
+
+  Elandlord\NatsPhpBundle\Command\NatsConsumeCommand:
+    public: true
+    tags:
+      - { name: 'console.command' }
+
   Elandlord\NatsPhpBundle\Messenger\Transport\NatsTransportFactory:
     tags:
       - { name: 'messenger.transport_factory' }
-
-  # Console command
-  Elandlord\NatsPhpBundle\Command\NatsConsumeCommand:
-    tags:
-      - { name: 'console.command' }

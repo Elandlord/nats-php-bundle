@@ -11,8 +11,7 @@ class NatsConfig
 {
     public function __construct(
         protected array $config
-    )
-    {
+    ) {
     }
 
     public function getHost(): string
