@@ -13,7 +13,7 @@ use Symfony\Component\Console\Output\OutputInterface;
  * @copyright    2025, Eric Landheer
  * @license      MIT License
  */
-class NatsListConsumersCommand extends Command
+class NatsListConsumerCommand extends Command
 {
     protected static $defaultName = self::COMMAND_NAME;
     protected static $defaultDescription = self::COMMAND_DESCRIPTION;

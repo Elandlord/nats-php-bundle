@@ -33,7 +33,6 @@ class Configuration implements ConfigurationInterface
                     ->arrayPrototype()
                         ->children()
                             ->scalarNode('stream')->isRequired()->end()
-                            ->scalarNode('name')->isRequired()->end()
                             ->scalarNode('subject_filter')->defaultNull()->end()
                             ->integerNode('max_deliver')->defaultValue(AbstractEventConsumer::DEFAULT_MAX_DELIVER)->end()
                             ->integerNode('ack_wait_ms')->defaultValue(AbstractEventConsumer::DEFAULT_ACK_WAIT_MS)->end()
