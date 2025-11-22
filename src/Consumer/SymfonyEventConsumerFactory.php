@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Elandlord\NatsPhpBundle\Consumer;
 
+use Elandlord\NatsPhp\Consumer\AbstractEventConsumer;
 use Elandlord\NatsPhpBundle\Connection\NatsConnectionFactory;
 use Elandlord\NatsPhpBundle\Registry\EventHandlerRegistry;
 
@@ -12,22 +13,17 @@ use Elandlord\NatsPhpBundle\Registry\EventHandlerRegistry;
  */
 class SymfonyEventConsumerFactory
 {
-    public const STREAM_KEY = 'stream';
-    public const NAME_KEY = 'name';
-    public const SUBJECT_FILTER_KEY = 'subject_filter';
-    public const MAX_DELIVER_KEY = 'max_deliver';
-    public const ACK_WAIT_MS_KEY = 'ack_wait_ms';
-
     public function __construct(
-        protected readonly NatsConnectionFactory $connectionFactory,
-        protected readonly EventHandlerRegistry  $handlerRegistry
-    ) {
+        private readonly NatsConnectionFactory $connectionFactory,
+        private readonly EventHandlerRegistry  $handlerRegistry
+    )
+    {
     }
 
     /**
      * @param array{
+     *   key: string,
      *   stream: string,
-     *   name: string,
      *   subject_filter?: ?string,
      *   max_deliver?: int,
      *   ack_wait_ms?: int
@@ -35,14 +31,21 @@ class SymfonyEventConsumerFactory
      */
     public function create(array $definition): SymfonyEventConsumer
     {
+        $consumerName = (string)$definition['key'];
+        $streamName = (string)$definition['stream'];
+
+        $subjectFilter = $definition['subject_filter'] ?? null;
+        $maxDeliver = (int)($definition['max_deliver'] ?? AbstractEventConsumer::DEFAULT_MAX_DELIVER);
+        $ackWaitMs = (int)($definition['ack_wait_ms'] ?? AbstractEventConsumer::DEFAULT_ACK_WAIT_MS);
+
         return new SymfonyEventConsumer(
             connectionFactory: $this->connectionFactory,
             registry: $this->handlerRegistry,
-            streamName: $definition[self::STREAM_KEY],
-            consumerName: $definition[self::NAME_KEY],
-            subjectFilter: $definition[self::SUBJECT_FILTER_KEY] ?? null,
-            maxDeliver: $definition[self::MAX_DELIVER_KEY] ?? null,
-            ackWaitMs: $definition[self::ACK_WAIT_MS_KEY] ?? null,
+            streamName: $streamName,
+            consumerName: $consumerName,
+            subjectFilter: $subjectFilter,
+            maxDeliver: $maxDeliver,
+            ackWaitMs: $ackWaitMs
         );
     }
 }

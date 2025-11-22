@@ -13,26 +13,44 @@ class ConsumerRegistry
      * @param array<string, array<string, mixed>> $definitions
      */
     public function __construct(
-        private readonly array $definitions
-    ) {}
-
-    public function has(string $name): bool
+        protected readonly array $definitions
+    )
     {
-        return isset($this->definitions[$name]);
     }
 
-    public function get(string $name): array
+    public function has(string $key): bool
     {
-        if (!$this->has($name)) {
-            throw new \InvalidArgumentException(sprintf('Unknown consumer "%s"', $name));
+        return isset($this->definitions[$key]);
+    }
+
+    /**
+     * @return array{key: string, stream: string, subject_filter?: ?string, max_deliver?: int, ack_wait_ms?: int}
+     */
+    public function get(string $key): array
+    {
+        if (!$this->has($key)) {
+            throw new \InvalidArgumentException(sprintf('Unknown consumer "%s"', $key));
         }
 
-        return $this->definitions[$name];
+        return [
+            'key' => $key,
+            ...$this->definitions[$key],
+        ];
     }
 
+    /**
+     * @return array<string, array{key: string} & array<string,mixed>>
+     */
     public function all(): array
     {
-        return $this->definitions;
+        $all = [];
+        foreach ($this->definitions as $key => $def) {
+            $all[$key] = [
+                'key' => $key,
+                ...$def,
+            ];
+        }
+        return $all;
     }
 
     public function list(): array

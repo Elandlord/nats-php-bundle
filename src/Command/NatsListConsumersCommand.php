@@ -13,7 +13,7 @@ use Symfony\Component\Console\Output\OutputInterface;
  * @copyright    2025, Eric Landheer
  * @license      MIT License
  */
-class NatsListConsumerCommand extends Command
+class NatsListConsumersCommand extends Command
 {
     protected static $defaultName = self::COMMAND_NAME;
     protected static $defaultDescription = self::COMMAND_DESCRIPTION;
@@ -28,8 +28,8 @@ class NatsListConsumerCommand extends Command
     protected const HEADER_SUBJECT = 'Subject Filter';
     protected const HEADER_MAX_DELIVER = 'Max Deliver';
     protected const HEADER_ACK_WAIT_MS = 'Ack Wait (ms)';
+
     protected const DEF_STREAM = 'stream';
-    protected const DEF_NAME = 'name';
     protected const DEF_SUBJECT_FILTER = 'subject_filter';
     protected const DEF_MAX_DELIVER = 'max_deliver';
     protected const DEF_ACK_WAIT_MS = 'ack_wait_ms';
@@ -39,8 +39,9 @@ class NatsListConsumerCommand extends Command
     protected const DEFAULT_VALUE = '(default)';
 
     public function __construct(
-        protected ConsumerRegistry $consumerRegistry
-    ) {
+        protected readonly ConsumerRegistry $consumerRegistry
+    )
+    {
         parent::__construct();
     }
 
@@ -63,14 +64,14 @@ class NatsListConsumerCommand extends Command
             self::HEADER_ACK_WAIT_MS,
         ]);
 
-        foreach ($definitions as $key => $def) {
+        foreach ($definitions as $key => $definition) {
             $table->addRow([
                 $key,
-                $def[self::DEF_STREAM] ?? self::MISSING_VALUE,
-                $def[self::DEF_NAME] ?? self::MISSING_VALUE,
-                $def[self::DEF_SUBJECT_FILTER] ?? self::NONE_VALUE,
-                $def[self::DEF_MAX_DELIVER] ?? self::DEFAULT_VALUE,
-                $def[self::DEF_ACK_WAIT_MS] ?? self::DEFAULT_VALUE,
+                $definition[self::DEF_STREAM] ?? self::MISSING_VALUE,
+                $key,
+                $definition[self::DEF_SUBJECT_FILTER] ?? self::NONE_VALUE,
+                $definition[self::DEF_MAX_DELIVER] ?? self::DEFAULT_VALUE,
+                $definition[self::DEF_ACK_WAIT_MS] ?? self::DEFAULT_VALUE,
             ]);
         }
 

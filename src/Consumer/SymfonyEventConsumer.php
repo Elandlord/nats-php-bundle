@@ -19,17 +19,17 @@ class SymfonyEventConsumer extends AbstractEventConsumer
         string $streamName,
         string $consumerName,
         ?string $subjectFilter = null,
-        ?int $maxDeliver = null,
-        ?int $ackWaitMs = null,
+        int $maxDeliver = self::DEFAULT_MAX_DELIVER,
+        int $ackWait = self::DEFAULT_ACK_WAIT_MS,
     ) {
         parent::__construct(
-            connection: $connectionFactory->create(),
-            handlers: $registry->all(),
-            streamName: $streamName,
-            consumerName: $consumerName,
-            subjectFilter: $subjectFilter,
-            maxDeliver: $maxDeliver ?? self::DEFAULT_MAX_DELIVER,
-            ackWait: $ackWaitMs ?? self::DEFAULT_ACK_WAIT_MS,
+            connection:     $connectionFactory->create(),
+            handlers:       $registry->all(),
+            streamName:     $streamName,
+            consumerName:   $consumerName,
+            subjectFilter:  $subjectFilter,
+            maxDeliver:     $maxDeliver,
+            ackWait:        $ackWait
         );
     }
 }

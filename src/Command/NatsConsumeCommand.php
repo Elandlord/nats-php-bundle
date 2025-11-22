@@ -17,12 +17,12 @@ use Symfony\Component\Console\Output\OutputInterface;
 class NatsConsumeCommand extends Command
 {
     protected static $defaultName = 'nats:consume';
+    protected static $defaultDescription = 'Consume events from a configured NATS consumer.';
 
     public function __construct(
-        private readonly ConsumerRegistry $consumerRegistry,
-        private readonly SymfonyEventConsumerFactory $consumerFactory
-    )
-    {
+        protected readonly ConsumerRegistry $consumerRegistry,
+        protected readonly SymfonyEventConsumerFactory $consumerFactory
+    ) {
         parent::__construct();
     }
 
@@ -37,11 +37,11 @@ class NatsConsumeCommand extends Command
         $key = (string)$input->getArgument('consumer');
 
         $definition = $this->consumerRegistry->get($key);
-        $consumer = $this->consumerFactory->create($definition);
+        $consumer   = $this->consumerFactory->create($definition);
 
         $output->writeln(sprintf(
             'Consuming NATS consumer="%s" on stream="%s"...',
-            $definition['name'],
+            $definition['key'],
             $definition['stream']
         ));
 
