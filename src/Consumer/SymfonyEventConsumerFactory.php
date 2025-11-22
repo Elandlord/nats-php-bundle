@@ -45,7 +45,7 @@ class SymfonyEventConsumerFactory
             consumerName: $consumerName,
             subjectFilter: $subjectFilter,
             maxDeliver: $maxDeliver,
-            ackWaitMs: $ackWaitMs
+            ackWait: $ackWaitMs
         );
     }
 }
