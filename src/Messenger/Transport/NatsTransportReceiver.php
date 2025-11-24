@@ -8,6 +8,7 @@ use Basis\Nats\Message\Msg;
 use Basis\Nats\Stream\Stream;
 use Elandlord\NatsPhp\Connection\NatsConnection;
 use Elandlord\NatsPhpBundle\Messenger\Message\RawNatsEvent;
+use Elandlord\NatsPhpBundle\Messenger\Stamp\NatsReceivedStamp;
 use JsonException;
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\Exception\TransportException;
@@ -21,29 +22,25 @@ use Throwable;
  */
 class NatsTransportReceiver implements ReceiverInterface
 {
-    public const DEFAULT_TIMEOUT_MS   = 1000;
-    public const DEFAULT_MAX_DELIVER  = 3;
-    public const DEFAULT_ACK_WAIT_MS  = 10_000;
+    public const DEFAULT_TIMEOUT_MS = 1000;
+    public const DEFAULT_MAX_DELIVER = 3;
+    public const DEFAULT_ACK_WAIT_MS = 10_000;
 
     public const EVENT_NAME_KEY = 'eventName';
-    public const BODY_KEY       = 'body';
-    public const HEADERS_KEY    = 'headers';
-
-    /**
-     * @var array<string, Msg>
-     */
-    protected array $messages = [];
+    public const BODY_KEY = 'body';
+    public const HEADERS_KEY = 'headers';
 
     public function __construct(
-        protected readonly NatsConnection $connection,
+        protected readonly NatsConnection      $connection,
         protected readonly SerializerInterface $serializer,
-        protected readonly string $stream,
-        protected readonly string $consumer,
-        protected readonly ?string $subjectFilter = null,
-        protected readonly int $maxDeliver = self::DEFAULT_MAX_DELIVER,
-        protected readonly int $ackWaitMs = self::DEFAULT_ACK_WAIT_MS,
-        protected readonly int $timeoutMs = self::DEFAULT_TIMEOUT_MS,
-    ) {
+        protected readonly string              $stream,
+        protected readonly string              $consumer,
+        protected readonly ?string             $subjectFilter = null,
+        protected readonly int                 $maxDeliver = self::DEFAULT_MAX_DELIVER,
+        protected readonly int                 $ackWaitMs = self::DEFAULT_ACK_WAIT_MS,
+        protected readonly int                 $timeoutMs = self::DEFAULT_TIMEOUT_MS,
+    )
+    {
     }
 
     /**
@@ -52,7 +49,7 @@ class NatsTransportReceiver implements ReceiverInterface
     public function get(): iterable
     {
         $consumer = $this->getOrCreateConsumer();
-        $queue    = $consumer->getQueue();
+        $queue = $consumer->getQueue();
 
         $message = $queue->next($this->timeoutMs);
 
@@ -61,15 +58,15 @@ class NatsTransportReceiver implements ReceiverInterface
         }
 
         try {
-            $decoded  = $this->decodePayload($message->payload->body);
+            $decoded = $this->decodePayload($message->payload->body);
             $envelope = $this->buildEnvelopeFromDecoded($decoded, $message);
+
+            $envelope->with(new NatsReceivedStamp($message));
+
         } catch (Throwable $exception) {
             $this->onProcessingError($exception, $message);
             throw $exception;
         }
-
-        $hash = spl_object_hash($envelope);
-        $this->messages[$hash] = $message;
 
         yield $envelope;
     }
@@ -129,32 +126,32 @@ class NatsTransportReceiver implements ReceiverInterface
 
     public function ack(Envelope $envelope): void
     {
-        $hash = spl_object_hash($envelope);
-        if (!isset($this->messages[$hash])) {
+        $stamp = $envelope->last(NatsReceivedStamp::class);
+
+        if ($stamp === null) {
             return;
         }
 
-        $message = $this->messages[$hash];
+        $message = $stamp->message;
+
         if ($message->replyTo !== null) {
             $message->ack();
         }
-
-        unset($this->messages[$hash]);
     }
 
     public function reject(Envelope $envelope): void
     {
-        $hash = spl_object_hash($envelope);
-        if (!isset($this->messages[$hash])) {
+        $stamp = $envelope->last(NatsReceivedStamp::class);
+
+        if ($stamp === null) {
             return;
         }
 
-        $message = $this->messages[$hash];
+        $message = $stamp->message;
+
         if ($message->replyTo !== null) {
             $message->nack(1.0);
         }
-
-        unset($this->messages[$hash]);
     }
 
     protected function getOrCreateConsumer(): Consumer
@@ -164,7 +161,7 @@ class NatsTransportReceiver implements ReceiverInterface
         $stream = $client->getApi()->getStream($this->stream);
 
         $consumer = $stream->getConsumer($this->consumer);
-        $config   = $consumer->getConfiguration();
+        $config = $consumer->getConfiguration();
 
         if ($this->subjectFilter !== null) {
             $config->setSubjectFilter($this->subjectFilter);
