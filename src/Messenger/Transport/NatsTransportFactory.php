@@ -5,7 +5,6 @@ namespace Elandlord\NatsPhpBundle\Messenger\Transport;
 
 use Elandlord\NatsPhp\Connection\NatsConnection;
 use Elandlord\NatsPhpBundle\Connection\NatsConnectionFactory;
-use Elandlord\NatsPhpBundle\Messenger\Message\EventEnvelopeFactory;
 use Symfony\Component\Messenger\Transport\TransportFactoryInterface;
 use Symfony\Component\Messenger\Transport\TransportInterface;
 use Symfony\Component\Messenger\Transport\Serialization\SerializerInterface;
@@ -17,9 +16,12 @@ use Symfony\Component\Messenger\Exception\TransportException;
  */
 class NatsTransportFactory implements TransportFactoryInterface
 {
+    /**
+     * @param array<string, class-string> $eventMap
+     */
     public function __construct(
         protected readonly NatsConnectionFactory $connectionFactory,
-        protected readonly ?EventEnvelopeFactory $eventEnvelopeFactory
+        protected readonly array                 $eventMap = []
     )
     {
     }
@@ -55,10 +57,10 @@ class NatsTransportFactory implements TransportFactoryInterface
     }
 
     protected function createSender(
-        NatsConnection $connection,
+        NatsConnection      $connection,
         SerializerInterface $serializer,
-        string $stream,
-        ?string $subjectPrefix = null
+        string              $stream,
+        ?string             $subjectPrefix = null
     ): NatsTransportSender
     {
         return new NatsTransportSender(
@@ -70,10 +72,10 @@ class NatsTransportFactory implements TransportFactoryInterface
     }
 
     protected function createReceiver(
-        NatsConnection $connection,
+        NatsConnection      $connection,
         SerializerInterface $serializer,
-        string $stream,
-        string $consumer
+        string              $stream,
+        string              $consumer
 
     ): NatsTransportReceiver
     {
@@ -81,7 +83,12 @@ class NatsTransportFactory implements TransportFactoryInterface
             connection: $connection,
             serializer: $serializer,
             stream: $stream,
-            consumer: $consumer
+            consumer: $consumer,
+            subjectFilter: $options['subject_filter'] ?? null,
+            maxDeliver: (int)($options['max_deliver'] ?? NatsTransportReceiver::DEFAULT_MAX_DELIVER),
+            ackWaitMs: (int)($options['ack_wait_ms'] ?? NatsTransportReceiver::DEFAULT_ACK_WAIT_MS),
+            timeoutMs: (int)($options['timeout_ms'] ?? NatsTransportReceiver::DEFAULT_TIMEOUT_MS),
+            eventMap: $this->eventMap
         );
     }
 

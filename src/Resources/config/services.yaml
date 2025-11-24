@@ -6,7 +6,7 @@ services:
 
   _instanceof:
     Elandlord\NatsPhp\Contract\Handler\EventHandlerInterface:
-      tags: ['nats.event_handler']
+      tags: [ 'nats.event_handler' ]
 
   Elandlord\NatsPhpBundle\:
     resource: '../../*'
@@ -37,5 +37,7 @@ services:
       - { name: 'console.command' }
 
   Elandlord\NatsPhpBundle\Messenger\Transport\NatsTransportFactory:
+    arguments:
+      $eventMap: '%nats_php.event_map%'
     tags:
       - { name: 'messenger.transport_factory' }
