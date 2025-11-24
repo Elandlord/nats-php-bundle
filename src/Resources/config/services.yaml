@@ -31,11 +31,6 @@ services:
 
   Elandlord\NatsPhpBundle\Messaging\EventEnvelopeFactory: ~
 
-  Elandlord\NatsPhpBundle\Command\NatsConsumeCommand:
-    public: true
-    tags:
-      - { name: 'console.command' }
-
   Elandlord\NatsPhpBundle\Messenger\Transport\NatsTransportFactory:
     arguments:
       $eventMap: '%nats_php.event_map%'
