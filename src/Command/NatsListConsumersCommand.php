@@ -37,6 +37,7 @@ class NatsListConsumersCommand extends Command
     protected const MISSING_VALUE = '(missing)';
     protected const NONE_VALUE = '(none)';
     protected const DEFAULT_VALUE = '(default)';
+    protected const ALL_EVENTS    = '(all)';
 
     public function __construct(
         protected readonly ConsumerRegistry $consumerRegistry
@@ -65,6 +66,9 @@ class NatsListConsumersCommand extends Command
         ]);
 
         foreach ($definitions as $key => $definition) {
+            $subjectFilter = $definition[self::DEF_SUBJECT_FILTER] ?? null;
+            $events = $this->resolveEventsForConsumer($subjectFilter);
+
             $table->addRow([
                 $key,
                 $definition[self::DEF_STREAM] ?? self::MISSING_VALUE,
@@ -72,10 +76,58 @@ class NatsListConsumersCommand extends Command
                 $definition[self::DEF_SUBJECT_FILTER] ?? self::NONE_VALUE,
                 $definition[self::DEF_MAX_DELIVER] ?? self::DEFAULT_VALUE,
                 $definition[self::DEF_ACK_WAIT_MS] ?? self::DEFAULT_VALUE,
+                $events
             ]);
         }
 
         $table->render();
         return Command::SUCCESS;
+    }
+
+    protected function resolveEventsForConsumer(?string $subjectFilter): string
+    {
+        if (empty($this->eventMap)) {
+            return self::NONE_VALUE;
+        }
+
+        if ($subjectFilter === null || $subjectFilter === '') {
+            return self::ALL_EVENTS;
+        }
+
+        $prefix = $this->subjectFilterToPrefix($subjectFilter);
+
+        if ($prefix === null) {
+            return self::ALL_EVENTS;
+        }
+
+        $matched = [];
+        foreach (array_keys($this->eventMap) as $eventName) {
+            if (str_starts_with($eventName, $prefix)) {
+                $matched[] = $eventName;
+            }
+        }
+
+        if (!$matched) {
+            return self::NONE_VALUE;
+        }
+
+        return implode("\n", $matched);
+    }
+
+    protected function subjectFilterToPrefix(string $filter): ?string
+    {
+        $filter = trim($filter);
+
+        if ($filter === '>' || $filter === '*') {
+            return null;
+        }
+
+        $filter = rtrim($filter, '>*');
+
+        if ($filter === '') {
+            return null;
+        }
+
+        return $filter;
     }
 }
