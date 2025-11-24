@@ -30,6 +30,9 @@ class NatsTransportReceiver implements ReceiverInterface
     public const BODY_KEY = 'body';
     public const HEADERS_KEY = 'headers';
 
+    /**
+     * @var array<string, class-string> $eventMap
+     */
     public function __construct(
         protected readonly NatsConnection      $connection,
         protected readonly SerializerInterface $serializer,
@@ -39,6 +42,7 @@ class NatsTransportReceiver implements ReceiverInterface
         protected readonly int                 $maxDeliver = self::DEFAULT_MAX_DELIVER,
         protected readonly int                 $ackWaitMs = self::DEFAULT_ACK_WAIT_MS,
         protected readonly int                 $timeoutMs = self::DEFAULT_TIMEOUT_MS,
+        protected readonly array $eventMap = [],
     )
     {
     }
@@ -60,30 +64,33 @@ class NatsTransportReceiver implements ReceiverInterface
         try {
             $decoded = $this->decodePayload($message->payload->body);
             $envelope = $this->buildEnvelopeFromDecoded($decoded, $message);
-
-            $envelope = $envelope->with(new NatsReceivedStamp($message));
-
         } catch (Throwable $exception) {
             $this->onProcessingError($exception, $message);
             throw $exception;
         }
 
+        $envelope = $envelope->with(new NatsReceivedStamp($message));
         yield $envelope;
     }
 
     protected function buildEnvelopeFromDecoded(array $data, Msg $message): Envelope
     {
         if (isset($data[self::EVENT_NAME_KEY], $data[self::BODY_KEY]) && is_string($data[self::EVENT_NAME_KEY])) {
+            $eventName = $data[self::EVENT_NAME_KEY];
             $body = $data[self::BODY_KEY];
 
             if (!is_array($body)) {
                 $body = (array)$body;
             }
 
-            return new Envelope(new RawNatsEvent(
-                $data[self::EVENT_NAME_KEY],
-                $body
-            ));
+            $messageClass = $this->eventMap[$eventName] ?? null;
+
+            if ($messageClass) {
+                $dto = $this->hydrateMessage($messageClass, $body);
+                return new Envelope($dto);
+            }
+
+            return new Envelope(new RawNatsEvent($eventName, $body));
         }
 
         if (isset($data[self::BODY_KEY], $data[self::HEADERS_KEY])) {
@@ -92,6 +99,22 @@ class NatsTransportReceiver implements ReceiverInterface
 
         $eventName = $message->subject;
         return new Envelope(new RawNatsEvent($eventName, $data));
+    }
+
+    protected function hydrateMessage(string $messageClass, array $body): object
+    {
+        try {
+            return new $messageClass(...$body);
+        } catch (Throwable $exception) {
+            throw new TransportException(
+                sprintf('Failed to hydrate "%s" from NATS body keys [%s].',
+                    $messageClass,
+                    implode(', ', array_keys($body))
+                ),
+                0,
+                $exception
+            );
+        }
     }
 
     protected function onProcessingError(Throwable $exception, Msg $message): void
