@@ -28,6 +28,7 @@ class NatsListConsumersCommand extends Command
     protected const HEADER_SUBJECT = 'Subject Filter';
     protected const HEADER_MAX_DELIVER = 'Max Deliver';
     protected const HEADER_ACK_WAIT_MS = 'Ack Wait (ms)';
+    protected const EVENTS = 'Associated Events';
 
     protected const DEF_STREAM = 'stream';
     protected const DEF_SUBJECT_FILTER = 'subject_filter';
@@ -64,6 +65,7 @@ class NatsListConsumersCommand extends Command
             self::HEADER_SUBJECT,
             self::HEADER_MAX_DELIVER,
             self::HEADER_ACK_WAIT_MS,
+            self::EVENTS
         ]);
 
         foreach ($definitions as $key => $definition) {
