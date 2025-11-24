@@ -40,7 +40,8 @@ class NatsListConsumersCommand extends Command
     protected const ALL_EVENTS    = '(all)';
 
     public function __construct(
-        protected readonly ConsumerRegistry $consumerRegistry
+        protected readonly ConsumerRegistry $consumerRegistry,
+        protected readonly array $eventMap = []
     )
     {
         parent::__construct();
