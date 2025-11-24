@@ -61,7 +61,7 @@ class NatsTransportReceiver implements ReceiverInterface
             $decoded = $this->decodePayload($message->payload->body);
             $envelope = $this->buildEnvelopeFromDecoded($decoded, $message);
 
-            $envelope->with(new NatsReceivedStamp($message));
+            $envelope = $envelope->with(new NatsReceivedStamp($message));
 
         } catch (Throwable $exception) {
             $this->onProcessingError($exception, $message);
