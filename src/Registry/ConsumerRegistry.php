@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace Elandlord\NatsPhpBundle\Registry;
 
+use InvalidArgumentException;
+
 /**
  * @copyright    2025, Eric Landheer
  * @license      MIT License
@@ -29,7 +31,7 @@ class ConsumerRegistry
     public function get(string $key): array
     {
         if (!$this->has($key)) {
-            throw new \InvalidArgumentException(sprintf('Unknown consumer "%s"', $key));
+            throw new InvalidArgumentException(sprintf('Unknown consumer "%s"', $key));
         }
 
         return [
@@ -44,10 +46,10 @@ class ConsumerRegistry
     public function all(): array
     {
         $all = [];
-        foreach ($this->definitions as $key => $def) {
+        foreach ($this->definitions as $key => $definition) {
             $all[$key] = [
                 'key' => $key,
-                ...$def,
+                ...$definition,
             ];
         }
         return $all;

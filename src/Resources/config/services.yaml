@@ -29,6 +29,8 @@ services:
 
   Elandlord\NatsPhpBundle\Consumer\SymfonyEventConsumerFactory: ~
 
+  Elandlord\NatsPhpBundle\Messaging\EventEnvelopeFactory: ~
+
   Elandlord\NatsPhpBundle\Command\NatsConsumeCommand:
     public: true
     tags:

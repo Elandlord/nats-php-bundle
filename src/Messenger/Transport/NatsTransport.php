@@ -5,6 +5,7 @@ namespace Elandlord\NatsPhpBundle\Messenger\Transport;
 
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\Transport\TransportInterface;
+use Throwable;
 
 /**
  * @copyright    2025, Eric Landheer
@@ -23,6 +24,9 @@ class NatsTransport implements TransportInterface
         return $this->sender->send($envelope);
     }
 
+    /**
+     * @throws Throwable
+     */
     public function get(): iterable
     {
         return $this->receiver->get();

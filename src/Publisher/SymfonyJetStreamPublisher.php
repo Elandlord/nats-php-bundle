@@ -8,6 +8,7 @@ use Elandlord\NatsPhp\Contract\Model\SubjectPublisherInterface;
 use Elandlord\NatsPhp\Messaging\EventEnvelope;
 use Elandlord\NatsPhp\Publisher\JetStreamPublisher;
 use Elandlord\NatsPhpBundle\Connection\NatsConnectionFactory;
+use JsonException;
 
 /**
  * @copyright    2025, Eric Landheer
@@ -15,12 +16,12 @@ use Elandlord\NatsPhpBundle\Connection\NatsConnectionFactory;
  */
 class SymfonyJetStreamPublisher implements SubjectPublisherInterface
 {
-    private JetStreamPublisher $publisher;
+    protected JetStreamPublisher $publisher;
 
     public function __construct(
         NatsConnectionFactory $connectionFactory,
         protected string $streamName,
-        protected string $subjectPrefix
+        protected string $subjectPrefix = ''
     ) {
         $connection = $connectionFactory->create();
         $this->publisher = new JetStreamPublisher($connection, $this->streamName);
@@ -31,16 +32,20 @@ class SymfonyJetStreamPublisher implements SubjectPublisherInterface
         $this->publisher->publish($subject, $payload);
     }
 
+    /**
+     * @throws JsonException
+     */
     public function publishEvent(EventMessageInterface $eventDto): void
     {
         $eventName = $eventDto->getEventName();
 
         $envelope = new EventEnvelope(
             eventName: $eventName,
-            body:      $eventDto
+            body: $eventDto
         );
 
-        $payload = serialize($envelope);
+        $payload = json_encode($envelope, JSON_THROW_ON_ERROR);
+
         $subject = $this->buildSubject($eventName);
 
         $this->publish($subject, $payload);
@@ -48,6 +53,12 @@ class SymfonyJetStreamPublisher implements SubjectPublisherInterface
 
     private function buildSubject(string $eventName): string
     {
-        return sprintf('%s.%s', $this->subjectPrefix, $eventName);
+        $streamRoot = strtolower($this->streamName);
+
+        if ($this->subjectPrefix !== '') {
+            return sprintf('%s.%s', $this->subjectPrefix, $eventName);
+        }
+
+        return sprintf('%s.%s', $streamRoot, $eventName);
     }
 }

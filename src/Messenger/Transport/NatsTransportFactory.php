@@ -3,7 +3,9 @@ declare(strict_types=1);
 
 namespace Elandlord\NatsPhpBundle\Messenger\Transport;
 
+use Elandlord\NatsPhp\Connection\NatsConnection;
 use Elandlord\NatsPhpBundle\Connection\NatsConnectionFactory;
+use Elandlord\NatsPhpBundle\Messenger\Message\EventEnvelopeFactory;
 use Symfony\Component\Messenger\Transport\TransportFactoryInterface;
 use Symfony\Component\Messenger\Transport\TransportInterface;
 use Symfony\Component\Messenger\Transport\Serialization\SerializerInterface;
@@ -16,7 +18,8 @@ use Symfony\Component\Messenger\Exception\TransportException;
 class NatsTransportFactory implements TransportFactoryInterface
 {
     public function __construct(
-        private readonly NatsConnectionFactory $connectionFactory
+        protected readonly NatsConnectionFactory $connectionFactory,
+        protected readonly ?EventEnvelopeFactory $eventEnvelopeFactory
     )
     {
     }
@@ -45,24 +48,44 @@ class NatsTransportFactory implements TransportFactoryInterface
 
         $connection = $this->connectionFactory->create();
 
-        $sender = new NatsTransportSender(
+        $sender = $this->createSender($connection, $serializer, $stream, $subjectPrefix);
+        $receiver = $this->createReceiver($connection, $serializer, $stream, $consumer);
+
+        return new NatsTransport($sender, $receiver);
+    }
+
+    protected function createSender(
+        NatsConnection $connection,
+        SerializerInterface $serializer,
+        string $stream,
+        ?string $subjectPrefix = null
+    ): NatsTransportSender
+    {
+        return new NatsTransportSender(
             connection: $connection,
             serializer: $serializer,
             stream: $stream,
             subjectPrefix: $subjectPrefix
         );
+    }
 
-        $receiver = new NatsTransportReceiver(
+    protected function createReceiver(
+        NatsConnection $connection,
+        SerializerInterface $serializer,
+        string $stream,
+        string $consumer
+
+    ): NatsTransportReceiver
+    {
+        return new NatsTransportReceiver(
             connection: $connection,
             serializer: $serializer,
             stream: $stream,
             consumer: $consumer
         );
-
-        return new NatsTransport($sender, $receiver);
     }
 
-    private function parseDsn(string $dsn): array
+    protected function parseDsn(string $dsn): array
     {
         $parts = parse_url($dsn) ?: [];
 
