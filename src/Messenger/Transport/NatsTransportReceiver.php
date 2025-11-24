@@ -62,7 +62,7 @@ class NatsTransportReceiver implements ReceiverInterface
 
         try {
             $decoded  = $this->decodePayload($message->payload->body);
-            $envelope = $this->buildEnvelopeFromDecoded($decoded);
+            $envelope = $this->buildEnvelopeFromDecoded($decoded, $message);
         } catch (Throwable $exception) {
             $this->onProcessingError($exception, $message);
             throw $exception;
@@ -74,25 +74,27 @@ class NatsTransportReceiver implements ReceiverInterface
         yield $envelope;
     }
 
-    protected function buildEnvelopeFromDecoded(array $data): Envelope
+    protected function buildEnvelopeFromDecoded(array $data, Msg $message): Envelope
     {
-        if (isset($data[self::EVENT_NAME_KEY], $data[self::BODY_KEY])) {
+        if (isset($data[self::EVENT_NAME_KEY], $data[self::BODY_KEY]) && is_string($data[self::EVENT_NAME_KEY])) {
             $body = $data[self::BODY_KEY];
 
             if (!is_array($body)) {
-                $body = (array) $body;
+                $body = (array)$body;
             }
 
-            return new Envelope(
-                new RawNatsEvent($data[self::EVENT_NAME_KEY], $body)
-            );
+            return new Envelope(new RawNatsEvent(
+                $data[self::EVENT_NAME_KEY],
+                $body
+            ));
         }
 
-        if (!isset($data[self::BODY_KEY], $data[self::HEADERS_KEY])) {
-            throw new TransportException('Invalid Messenger payload structure from NATS.');
+        if (isset($data[self::BODY_KEY], $data[self::HEADERS_KEY])) {
+            return $this->serializer->decode($data);
         }
 
-        return $this->serializer->decode($data);
+        $eventName = $message->subject;
+        return new Envelope(new RawNatsEvent($eventName, $data));
     }
 
     protected function onProcessingError(Throwable $exception, Msg $message): void
