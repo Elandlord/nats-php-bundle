@@ -3,7 +3,9 @@ declare(strict_types=1);
 
 namespace Elandlord\NatsPhpBundle\Publisher;
 
-use Elandlord\NatsPhp\Contract\Message\EventMessageInterface;
+use CloudEvents\Exceptions\UnsupportedSpecVersionException;
+use CloudEvents\Serializers\JsonSerializer;
+use CloudEvents\V1\CloudEventInterface;
 use Elandlord\NatsPhp\Contract\Model\SubjectPublisherInterface;
 use Elandlord\NatsPhp\Messaging\EventEnvelope;
 use Elandlord\NatsPhp\Publisher\JetStreamPublisher;
@@ -33,32 +35,13 @@ class SymfonyJetStreamPublisher implements SubjectPublisherInterface
     }
 
     /**
-     * @throws JsonException
+     * @throws UnsupportedSpecVersionException
      */
-    public function publishEvent(EventMessageInterface $eventDto): void
+    public function publishEvent(CloudEventInterface $eventDto): void
     {
-        $eventName = $eventDto->getEventName();
-
-        $envelope = new EventEnvelope(
-            eventName: $eventName,
-            body: $eventDto
-        );
-
-        $payload = json_encode($envelope, JSON_THROW_ON_ERROR);
-
-        $subject = $this->buildSubject($eventName);
+        $payload = JsonSerializer::create()->serializeStructured($eventDto);
+        $subject = $eventDto->getType();
 
         $this->publish($subject, $payload);
-    }
-
-    private function buildSubject(string $eventName): string
-    {
-        $streamRoot = strtolower($this->streamName);
-
-        if ($this->subjectPrefix !== '') {
-            return sprintf('%s.%s', $this->subjectPrefix, $eventName);
-        }
-
-        return sprintf('%s.%s', $streamRoot, $eventName);
     }
 }

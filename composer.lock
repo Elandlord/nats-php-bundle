@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "8a96f3f12b55d0c0b6ba69db9e1c0b36",
+    "content-hash": "403d2a9e16f5a8b76aaa3f5fd1fedb79",
     "packages": [
         {
             "name": "basis-company/nats",
@@ -73,21 +73,80 @@
             "time": "2025-09-25T11:27:12+00:00"
         },
         {
-            "name": "elandlord/nats-php",
-            "version": "v1.0.1",
+            "name": "cloudevents/sdk-php",
+            "version": "v1.2.0",
             "source": {
                 "type": "git",
-                "url": "https://github.com/Elandlord/nats-php.git",
-                "reference": "ef2f25431b90817011547b6555075f7a28d104f0"
+                "url": "https://github.com/cloudevents/sdk-php.git",
+                "reference": "2d2f14720c83e4ef2b8e17250817b25d59ba055b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Elandlord/nats-php/zipball/ef2f25431b90817011547b6555075f7a28d104f0",
-                "reference": "ef2f25431b90817011547b6555075f7a28d104f0",
+                "url": "https://api.github.com/repos/cloudevents/sdk-php/zipball/2d2f14720c83e4ef2b8e17250817b25d59ba055b",
+                "reference": "2d2f14720c83e4ef2b8e17250817b25d59ba055b",
+                "shasum": ""
+            },
+            "require": {
+                "ext-json": "*",
+                "ext-pcre": "*",
+                "php": "^7.4.15 || ^8.0.2",
+                "symfony/polyfill-php80": "^1.26"
+            },
+            "require-dev": {
+                "guzzlehttp/psr7": "^2.4.3",
+                "php-http/discovery": "^1.15.2",
+                "phpunit/phpunit": "^9.6.3 || ^10.0.12",
+                "psalm/phar": "5.26.1",
+                "psr/http-factory": "^1.0.1",
+                "psr/http-message": "^1.0.1",
+                "squizlabs/php_codesniffer": "3.7.2"
+            },
+            "suggest": {
+                "php-http/discovery": "Required for automatic discovery of HTTP message factories in the HTTP Marshaller.",
+                "psr/http-factory": "Required for use of the HTTP Marshaller.",
+                "psr/http-factory-implementation": "Required for use of the HTTP Marshaller.",
+                "psr/http-message": "Required for use of the HTTP Marshaller and Unmarshaller.",
+                "psr/http-message-implementation": "Required for use of the HTTP Marshaller and Unmarshaller."
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-main": "1.2-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "CloudEvents\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "Apache-2.0"
+            ],
+            "description": "CloudEvents SDK",
+            "support": {
+                "issues": "https://github.com/cloudevents/sdk-php/issues",
+                "source": "https://github.com/cloudevents/sdk-php"
+            },
+            "time": "2025-02-07T18:31:27+00:00"
+        },
+        {
+            "name": "elandlord/nats-php",
+            "version": "v1.1.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/Elandlord/nats-php.git",
+                "reference": "9768c65e929c7e6ddf3a3f186dac053dfc46b32a"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/Elandlord/nats-php/zipball/9768c65e929c7e6ddf3a3f186dac053dfc46b32a",
+                "reference": "9768c65e929c7e6ddf3a3f186dac053dfc46b32a",
                 "shasum": ""
             },
             "require": {
                 "basis-company/nats": "^1.0",
+                "cloudevents/sdk-php": "^1.2",
                 "php": ">=8.2"
             },
             "require-dev": {
@@ -109,9 +168,9 @@
             "description": "A lightweight, framework-agnostic PHP abstraction layer for NATS and JetStream. Includes publishers, consumers, message envelopes, and handler interfaces built on top of basis-company/nats.",
             "support": {
                 "issues": "https://github.com/Elandlord/nats-php/issues",
-                "source": "https://github.com/Elandlord/nats-php/tree/v1.0.1"
+                "source": "https://github.com/Elandlord/nats-php/tree/v1.1.0"
             },
-            "time": "2025-11-22T13:43:38+00:00"
+            "time": "2025-11-26T16:08:17+00:00"
         },
         {
             "name": "psr/cache",
@@ -2101,6 +2160,90 @@
                 }
             ],
             "time": "2024-12-23T08:48:59+00:00"
+        },
+        {
+            "name": "symfony/polyfill-php80",
+            "version": "v1.33.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/symfony/polyfill-php80.git",
+                "reference": "0cc9dd0f17f61d8131e7df6b84bd344899fe2608"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/symfony/polyfill-php80/zipball/0cc9dd0f17f61d8131e7df6b84bd344899fe2608",
+                "reference": "0cc9dd0f17f61d8131e7df6b84bd344899fe2608",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.2"
+            },
+            "type": "library",
+            "extra": {
+                "thanks": {
+                    "url": "https://github.com/symfony/polyfill",
+                    "name": "symfony/polyfill"
+                }
+            },
+            "autoload": {
+                "files": [
+                    "bootstrap.php"
+                ],
+                "psr-4": {
+                    "Symfony\\Polyfill\\Php80\\": ""
+                },
+                "classmap": [
+                    "Resources/stubs"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Ion Bazan",
+                    "email": "ion.bazan@gmail.com"
+                },
+                {
+                    "name": "Nicolas Grekas",
+                    "email": "p@tchwork.com"
+                },
+                {
+                    "name": "Symfony Community",
+                    "homepage": "https://symfony.com/contributors"
+                }
+            ],
+            "description": "Symfony polyfill backporting some PHP 8.0+ features to lower PHP versions",
+            "homepage": "https://symfony.com",
+            "keywords": [
+                "compatibility",
+                "polyfill",
+                "portable",
+                "shim"
+            ],
+            "support": {
+                "source": "https://github.com/symfony/polyfill-php80/tree/v1.33.0"
+            },
+            "funding": [
+                {
+                    "url": "https://symfony.com/sponsor",
+                    "type": "custom"
+                },
+                {
+                    "url": "https://github.com/fabpot",
+                    "type": "github"
+                },
+                {
+                    "url": "https://github.com/nicolas-grekas",
+                    "type": "github"
+                },
+                {
+                    "url": "https://tidelift.com/funding/github/packagist/symfony/symfony",
+                    "type": "tidelift"
+                }
+            ],
+            "time": "2025-01-02T08:10:11+00:00"
         },
         {
             "name": "symfony/polyfill-php83",

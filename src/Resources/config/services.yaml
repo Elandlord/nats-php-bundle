@@ -29,8 +29,6 @@ services:
 
   Elandlord\NatsPhpBundle\Consumer\SymfonyEventConsumerFactory: ~
 
-  Elandlord\NatsPhpBundle\Messaging\EventEnvelopeFactory: ~
-
   Elandlord\NatsPhpBundle\Command\NatsListConsumersCommand:
     arguments:
       $eventMap: '%nats_php.event_map%'

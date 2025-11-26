@@ -3,9 +3,11 @@ declare(strict_types=1);
 
 namespace Elandlord\NatsPhpBundle\DependencyInjection\Compiler;
 
+use CloudEvents\V1\CloudEventInterface;
 use Elandlord\NatsPhp\Contract\Message\EventMessageInterface;
 use InvalidArgumentException;
 use ReflectionClass;
+use ReflectionException;
 use ReflectionIntersectionType;
 use ReflectionNamedType;
 use ReflectionUnionType;
@@ -19,14 +21,19 @@ use Throwable;
  */
 class NatsEventMapCompilerPass implements CompilerPassInterface
 {
+    protected const MESSAGE_HANDLER_TAG = 'messenger.message_handler';
+
     /**
      * @return array<string, array>
      */
     protected function getMessageHandlers(ContainerBuilder $container): array
     {
-        return $container->findTaggedServiceIds('messenger.message_handler');
+        return $container->findTaggedServiceIds(self::MESSAGE_HANDLER_TAG);
     }
 
+    /**
+     * @throws ReflectionException
+     */
     protected function handleMessageHandler(ContainerBuilder $container, string $id): ?array
     {
         $class = $container->getDefinition($id)->getClass();
@@ -47,7 +54,7 @@ class NatsEventMapCompilerPass implements CompilerPassInterface
         }
 
         $messageClass = $reflectionType->getName();
-        if (!is_subclass_of($messageClass, EventMessageInterface::class)) {
+        if (!is_subclass_of($messageClass, CloudEventInterface::class)) {
             return null;
         }
 
@@ -61,6 +68,9 @@ class NatsEventMapCompilerPass implements CompilerPassInterface
         return null;
     }
 
+    /**
+     * @throws ReflectionException
+     */
     protected function isTypeAllowed(ReflectionClass $reflectionClass): ReflectionIntersectionType|ReflectionNamedType|ReflectionUnionType
     {
         $invoke = $reflectionClass->getMethod('__invoke');

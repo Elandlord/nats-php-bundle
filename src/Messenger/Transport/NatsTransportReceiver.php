@@ -5,11 +5,13 @@ namespace Elandlord\NatsPhpBundle\Messenger\Transport;
 
 use Basis\Nats\Consumer\Consumer;
 use Basis\Nats\Message\Msg;
-use Basis\Nats\Stream\Stream;
+use CloudEvents\Exceptions\InvalidPayloadSyntaxException;
+use CloudEvents\Exceptions\MissingAttributeException;
+use CloudEvents\Exceptions\UnsupportedSpecVersionException;
+use CloudEvents\Serializers\JsonDeserializer;
+use CloudEvents\V1\CloudEventInterface;
 use Elandlord\NatsPhp\Connection\NatsConnection;
-use Elandlord\NatsPhpBundle\Messenger\Message\RawNatsEvent;
 use Elandlord\NatsPhpBundle\Messenger\Stamp\NatsReceivedStamp;
-use JsonException;
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\Exception\TransportException;
 use Symfony\Component\Messenger\Transport\Receiver\ReceiverInterface;
@@ -26,10 +28,6 @@ class NatsTransportReceiver implements ReceiverInterface
     public const DEFAULT_MAX_DELIVER = 3;
     public const DEFAULT_ACK_WAIT_MS = 10_000;
 
-    public const EVENT_NAME_KEY = 'eventName';
-    public const BODY_KEY = 'body';
-    public const HEADERS_KEY = 'headers';
-
     /**
      * @var array<string, class-string> $eventMap
      */
@@ -42,7 +40,7 @@ class NatsTransportReceiver implements ReceiverInterface
         protected readonly int                 $maxDeliver = self::DEFAULT_MAX_DELIVER,
         protected readonly int                 $ackWaitMs = self::DEFAULT_ACK_WAIT_MS,
         protected readonly int                 $timeoutMs = self::DEFAULT_TIMEOUT_MS,
-        protected readonly array $eventMap = [],
+        protected readonly array               $eventMap = [],
     )
     {
     }
@@ -62,8 +60,7 @@ class NatsTransportReceiver implements ReceiverInterface
         }
 
         try {
-            $decoded = $this->decodePayload($message->payload->body);
-            $envelope = $this->buildEnvelopeFromDecoded($decoded, $message);
+            $envelope = $this->buildEnvelopeFromMessage($message);
         } catch (Throwable $exception) {
             $this->onProcessingError($exception, $message);
             throw $exception;
@@ -73,32 +70,38 @@ class NatsTransportReceiver implements ReceiverInterface
         yield $envelope;
     }
 
-    protected function buildEnvelopeFromDecoded(array $data, Msg $message): Envelope
+    /**
+     * @throws InvalidPayloadSyntaxException
+     * @throws UnsupportedSpecVersionException
+     * @throws MissingAttributeException
+     */
+    protected function buildEnvelopeFromMessage(Msg $message): Envelope
     {
-        if (isset($data[self::EVENT_NAME_KEY], $data[self::BODY_KEY]) && is_string($data[self::EVENT_NAME_KEY])) {
-            $eventName = $data[self::EVENT_NAME_KEY];
-            $body = $data[self::BODY_KEY];
+        $cloudEvent = JsonDeserializer::create()->deserializeStructured($message->payload->body);
 
-            if (!is_array($body)) {
-                $body = (array)$body;
-            }
-
-            $messageClass = $this->eventMap[$eventName] ?? null;
-
-            if ($messageClass) {
-                $dto = $this->hydrateMessage($messageClass, $body);
-                return new Envelope($dto);
-            }
-
-            return new Envelope(new RawNatsEvent($eventName, $body));
+        if (!$cloudEvent instanceof CloudEventInterface) {
+            throw new TransportException('Only CloudEvent v1 is supported.');
         }
 
-        if (isset($data[self::BODY_KEY], $data[self::HEADERS_KEY])) {
-            return $this->serializer->decode($data);
+        $messageClass = $this->eventMap[$cloudEvent->getType()] ?? null;
+
+        if ($messageClass) {
+            $data = $cloudEvent->getData();
+
+            if (!is_array($data)) {
+                $data = (array) $data;
+            }
+
+            $data = array_merge([
+                'source' => $cloudEvent->getSource(),
+            ], $data);
+
+            $dto = $this->hydrateMessage($messageClass, $data);
+
+            return new Envelope($dto);
         }
 
-        $eventName = $message->subject;
-        return new Envelope(new RawNatsEvent($eventName, $data));
+        return new Envelope($cloudEvent);
     }
 
     protected function hydrateMessage(string $messageClass, array $body): object
@@ -119,27 +122,7 @@ class NatsTransportReceiver implements ReceiverInterface
 
     protected function onProcessingError(Throwable $exception, Msg $message): void
     {
-        if ($message->replyTo !== null) {
-            $message->nack(1.0);
-        }
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    protected function decodePayload(string $payload): array
-    {
-        try {
-            $data = json_decode($payload, true, 512, JSON_THROW_ON_ERROR);
-        } catch (JsonException $exception) {
-            throw new TransportException('Invalid JSON payload received from NATS.', 0, $exception);
-        }
-
-        if (!is_array($data)) {
-            throw new TransportException('Invalid JSON payload from NATS (not an object).');
-        }
-
-        return $data;
+        // Left empty on purpose.
     }
 
     protected function shouldProcess(mixed $message): bool
