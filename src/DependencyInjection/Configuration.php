@@ -28,6 +28,10 @@ class Configuration implements ConfigurationInterface
                 ->booleanNode('pedantic')->defaultFalse()->end()
                 ->floatNode('delay')->defaultValue(0.01)->end()
 
+                // TLS options
+                ->scalarNode('tls_ca_file')->defaultNull()->end()
+                ->booleanNode('tls_handshake_first')->defaultFalse()->end()
+
                 ->arrayNode('consumers')
                     ->useAttributeAsKey('name')
                     ->arrayPrototype()

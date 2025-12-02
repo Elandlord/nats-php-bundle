@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Elandlord\NatsPhpBundle\Messenger\Transport;
 
+use CloudEvents\Exceptions\UnsupportedSpecVersionException;
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\Transport\TransportInterface;
 use Throwable;
@@ -19,6 +20,9 @@ class NatsTransport implements TransportInterface
     ) {
     }
 
+    /**
+     * @throws UnsupportedSpecVersionException
+     */
     public function send(Envelope $envelope): Envelope
     {
         return $this->sender->send($envelope);
