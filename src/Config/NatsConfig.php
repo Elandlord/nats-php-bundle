@@ -16,36 +16,52 @@ class NatsConfig
 
     public function getHost(): string
     {
-        return (string)$this->config['host'];
+        return (string)($this->config['host'] ?? '');
     }
 
     public function getPort(): int
     {
-        return (int)$this->config['port'];
+        return (int)($this->config['port'] ?? 4222);
     }
 
     public function getUser(): ?string
     {
-        return $this->config['user'];
+        $user = $this->config['user'] ?? null;
+        return ($user === '' ? null : $user);
     }
 
     public function getPass(): ?string
     {
-        return $this->config['pass'];
+        $pass = $this->config['pass'] ?? null;
+        return ($pass === '' ? null : $pass);
     }
 
     public function getReconnect(): bool
     {
-        return (bool)$this->config['reconnect'];
+        return (bool)($this->config['reconnect'] ?? true);
     }
 
     public function getPedantic(): bool
     {
-        return (bool)$this->config['pedantic'];
+        return (bool)($this->config['pedantic'] ?? false);
     }
 
     public function getDelay(): float
     {
-        return (float)$this->config['delay'];
+        return (float)($this->config['delay'] ?? 0.01);
+    }
+
+    public function getTlsCaFile(): ?string
+    {
+        $ca = $this->config['tlsCaFile'] ?? null;
+        return ($ca === '' ? null : $ca);
+    }
+
+    public function getTlsHandshakeFirst(): ?bool
+    {
+        if (!array_key_exists('tlsHandshakeFirst', $this->config)) {
+            return null;
+        }
+        return (bool)$this->config['tlsHandshakeFirst'];
     }
 }
