@@ -3,7 +3,11 @@ declare(strict_types=1);
 
 namespace Elandlord\NatsPhpBundle\Messenger\Transport;
 
+use CloudEvents\Exceptions\UnsupportedSpecVersionException;
+use CloudEvents\Serializers\JsonSerializer;
+use CloudEvents\V1\CloudEventInterface;
 use Elandlord\NatsPhp\Connection\NatsConnection;
+use Elandlord\NatsPhpBundle\Messenger\Stamp\NatsReceivedStamp;
 use JsonException;
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\Transport\Sender\SenderInterface;
@@ -24,12 +28,28 @@ class NatsTransportSender implements SenderInterface
     ) {
     }
 
+    /**
+     * @throws UnsupportedSpecVersionException
+     */
     public function send(Envelope $envelope): Envelope
     {
+        if ($envelope->last(NatsReceivedStamp::class) !== null) {
+            return $envelope;
+        }
+
         $client = $this->connection->getClient();
+        $message = $envelope->getMessage();
+
+        if ($message instanceof CloudEventInterface) {
+            $payload = JsonSerializer::create()->serializeStructured($message);
+            $subject = $message->getType();
+
+            $client->publish($subject, $payload);
+            return $envelope;
+        }
+
 
         $subject = $this->buildSubjectFromEnvelope($envelope);
-
         $encoded = $this->serializer->encode($envelope);
 
         try {
