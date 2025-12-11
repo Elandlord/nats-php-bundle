@@ -8,11 +8,16 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Attribute\AsCommand;
 
 /**
  * @copyright    2025, Eric Landheer
  * @license      MIT License
  */
+#[AsCommand(
+    name: 'nats:consumers:list',
+    description: 'List all configured NATS consumers.'
+)]
 class NatsListConsumersCommand extends Command
 {
     protected static $defaultName = self::COMMAND_NAME;
@@ -38,11 +43,11 @@ class NatsListConsumersCommand extends Command
     protected const MISSING_VALUE = '(missing)';
     protected const NONE_VALUE = '(none)';
     protected const DEFAULT_VALUE = '(default)';
-    protected const ALL_EVENTS    = '(all)';
+    protected const ALL_EVENTS = '(all)';
 
     public function __construct(
         protected readonly ConsumerRegistry $consumerRegistry,
-        protected readonly array $eventMap = []
+        protected readonly array            $eventMap = []
     )
     {
         parent::__construct();
