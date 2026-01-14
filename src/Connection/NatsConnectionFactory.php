@@ -50,11 +50,11 @@ class NatsConnectionFactory
             return $options;
         }
 
-        $options['tls_ca_file'] = $tlsCaFile;
+        $options['tlsCaFile'] = $tlsCaFile;
         $tlsHandshakeFirst = $this->config->getTlsHandshakeFirst();
 
         if ($tlsHandshakeFirst !== null) {
-            $options['tls_handshake_first'] = $tlsHandshakeFirst;
+            $options['tlsHandshakeFirst'] = $tlsHandshakeFirst;
         }
 
         return $options;
