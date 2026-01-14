@@ -53,15 +53,15 @@ class NatsConfig
 
     public function getTlsCaFile(): ?string
     {
-        $ca = $this->config['tlsCaFile'] ?? null;
+        $ca = $this->config['tls_ca_file'] ?? null;
         return ($ca === '' ? null : $ca);
     }
 
     public function getTlsHandshakeFirst(): ?bool
     {
-        if (!array_key_exists('tlsHandshakeFirst', $this->config)) {
+        if (!array_key_exists('tls_handshake_first', $this->config)) {
             return null;
         }
-        return (bool)$this->config['tlsHandshakeFirst'];
+        return (bool)$this->config['tls_handshake_first'];
     }
 }
