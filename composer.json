@@ -16,6 +16,8 @@
     "basis-company/nats": "^1.0",
     "symfony/console": "^6.4 || ^7.0",
     "cloudevents/sdk-php": "^1.2",
-    "symfony/serializer": "^6.4 || ^7.0"
+    "symfony/property-info": "^8.0",
+    "symfony/serializer": "^6.4 || ^7.0",
+    "phpdocumentor/reflection-docblock": "^6.0"
   }
 }

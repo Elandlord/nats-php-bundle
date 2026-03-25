@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Elandlord\NatsPhpBundle\Messenger\Transport;
@@ -16,7 +17,14 @@ use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\Exception\TransportException;
 use Symfony\Component\Messenger\Transport\Receiver\ReceiverInterface;
 use Symfony\Component\Messenger\Transport\Serialization\SerializerInterface;
+use Symfony\Component\PropertyInfo\Extractor\PhpDocExtractor;
+use Symfony\Component\PropertyInfo\Extractor\ReflectionExtractor;
+use Symfony\Component\PropertyInfo\PropertyInfoExtractor;
+use Symfony\Component\Serializer\Normalizer\AbstractObjectNormalizer;
+use Symfony\Component\Serializer\Normalizer\ArrayDenormalizer;
 use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
+use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
+use Symfony\Component\Serializer\Serializer;
 use Throwable;
 
 /**
@@ -29,23 +37,22 @@ class NatsTransportReceiver implements ReceiverInterface
     public const DEFAULT_MAX_DELIVER = 3;
     public const DEFAULT_ACK_WAIT_MS = 10_000;
 
+    private ?DenormalizerInterface $denormalizer = null;
+
     /**
      * @var array<string, class-string> $eventMap
      */
     public function __construct(
-        protected readonly NatsConnection          $connection,
-        protected readonly SerializerInterface     $serializer,
-        protected readonly DenormalizerInterface   $denormalizer,
-        protected readonly string                  $stream,
-        protected readonly string                  $consumer,
-        protected readonly ?string                 $subjectFilter = null,
-        protected readonly int                     $maxDeliver = self::DEFAULT_MAX_DELIVER,
-        protected readonly int                     $ackWaitMs = self::DEFAULT_ACK_WAIT_MS,
-        protected readonly int                     $timeoutMs = self::DEFAULT_TIMEOUT_MS,
-        protected readonly array                   $eventMap = [],
-    )
-    {
-    }
+        protected readonly NatsConnection      $connection,
+        protected readonly SerializerInterface $serializer,
+        protected readonly string              $stream,
+        protected readonly string              $consumer,
+        protected readonly ?string             $subjectFilter = null,
+        protected readonly int                 $maxDeliver = self::DEFAULT_MAX_DELIVER,
+        protected readonly int                 $ackWaitMs = self::DEFAULT_ACK_WAIT_MS,
+        protected readonly int                 $timeoutMs = self::DEFAULT_TIMEOUT_MS,
+        protected readonly array               $eventMap = [],
+    ) {}
 
     /**
      * @throws Throwable
@@ -109,10 +116,13 @@ class NatsTransportReceiver implements ReceiverInterface
     protected function hydrateMessage(string $messageClass, array $body): object
     {
         try {
-            return $this->denormalizer->denormalize($body, $messageClass);
+            return $this->getDenormalizer()->denormalize($body, $messageClass, context: [
+                AbstractObjectNormalizer::DISABLE_TYPE_ENFORCEMENT => true,
+            ]);
         } catch (Throwable $exception) {
             throw new TransportException(
-                sprintf('Failed to hydrate "%s" from NATS body keys [%s].',
+                sprintf(
+                    'Failed to hydrate "%s" from NATS body keys [%s].',
                     $messageClass,
                     implode(', ', array_keys($body))
                 ),
@@ -120,6 +130,25 @@ class NatsTransportReceiver implements ReceiverInterface
                 $exception
             );
         }
+    }
+
+    private function getDenormalizer(): DenormalizerInterface
+    {
+        if ($this->denormalizer === null) {
+            $phpDocExtractor = new PhpDocExtractor();
+            $reflectionExtractor = new ReflectionExtractor();
+
+            $propertyTypeExtractor = new PropertyInfoExtractor(
+                typeExtractors: [$phpDocExtractor, $reflectionExtractor],
+            );
+
+            $this->denormalizer = new Serializer([
+                new ArrayDenormalizer(),
+                new ObjectNormalizer(propertyTypeExtractor: $propertyTypeExtractor),
+            ]);
+        }
+
+        return $this->denormalizer;
     }
 
     protected function onProcessingError(Throwable $exception, Msg $message): void
