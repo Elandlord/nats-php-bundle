@@ -16,6 +16,7 @@ use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\Exception\TransportException;
 use Symfony\Component\Messenger\Transport\Receiver\ReceiverInterface;
 use Symfony\Component\Messenger\Transport\Serialization\SerializerInterface;
+use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
 use Throwable;
 
 /**
@@ -32,15 +33,16 @@ class NatsTransportReceiver implements ReceiverInterface
      * @var array<string, class-string> $eventMap
      */
     public function __construct(
-        protected readonly NatsConnection      $connection,
-        protected readonly SerializerInterface $serializer,
-        protected readonly string              $stream,
-        protected readonly string              $consumer,
-        protected readonly ?string             $subjectFilter = null,
-        protected readonly int                 $maxDeliver = self::DEFAULT_MAX_DELIVER,
-        protected readonly int                 $ackWaitMs = self::DEFAULT_ACK_WAIT_MS,
-        protected readonly int                 $timeoutMs = self::DEFAULT_TIMEOUT_MS,
-        protected readonly array               $eventMap = [],
+        protected readonly NatsConnection          $connection,
+        protected readonly SerializerInterface     $serializer,
+        protected readonly DenormalizerInterface   $denormalizer,
+        protected readonly string                  $stream,
+        protected readonly string                  $consumer,
+        protected readonly ?string                 $subjectFilter = null,
+        protected readonly int                     $maxDeliver = self::DEFAULT_MAX_DELIVER,
+        protected readonly int                     $ackWaitMs = self::DEFAULT_ACK_WAIT_MS,
+        protected readonly int                     $timeoutMs = self::DEFAULT_TIMEOUT_MS,
+        protected readonly array                   $eventMap = [],
     )
     {
     }
@@ -107,7 +109,7 @@ class NatsTransportReceiver implements ReceiverInterface
     protected function hydrateMessage(string $messageClass, array $body): object
     {
         try {
-            return new $messageClass(...$body);
+            return $this->denormalizer->denormalize($body, $messageClass);
         } catch (Throwable $exception) {
             throw new TransportException(
                 sprintf('Failed to hydrate "%s" from NATS body keys [%s].',
