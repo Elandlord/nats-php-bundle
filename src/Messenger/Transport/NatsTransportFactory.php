@@ -10,7 +10,6 @@ use Symfony\Component\Messenger\Transport\TransportFactoryInterface;
 use Symfony\Component\Messenger\Transport\TransportInterface;
 use Symfony\Component\Messenger\Transport\Serialization\SerializerInterface;
 use Symfony\Component\Messenger\Exception\TransportException;
-use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
 
 /**
  * @copyright    2025, Eric Landheer
@@ -23,7 +22,6 @@ class NatsTransportFactory implements TransportFactoryInterface
      */
     public function __construct(
         protected readonly NatsConnectionFactory $connectionFactory,
-        protected readonly DenormalizerInterface $denormalizer,
         protected readonly array                 $eventMap = []
     ) {}
 
