@@ -20,7 +20,7 @@ use Symfony\Component\Messenger\Transport\Serialization\SerializerInterface;
 use Symfony\Component\PropertyInfo\Extractor\PhpDocExtractor;
 use Symfony\Component\PropertyInfo\Extractor\ReflectionExtractor;
 use Symfony\Component\PropertyInfo\PropertyInfoExtractor;
-use Symfony\Component\Serializer\Normalizer\AbstractObjectNormalizer;
+use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\Normalizer\ArrayDenormalizer;
 use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
@@ -116,9 +116,7 @@ class NatsTransportReceiver implements ReceiverInterface
     protected function hydrateMessage(string $messageClass, array $body): object
     {
         try {
-            return $this->getDenormalizer()->denormalize($body, $messageClass, context: [
-                AbstractObjectNormalizer::DISABLE_TYPE_ENFORCEMENT => true,
-            ]);
+            return $this->getDenormalizer()->denormalize($body, $messageClass, JsonEncoder::FORMAT);
         } catch (Throwable $exception) {
             throw new TransportException(
                 sprintf(
