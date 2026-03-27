@@ -3,7 +3,6 @@ declare(strict_types=1);
 
 namespace Elandlord\NatsPhpBundle\Messenger\Transport;
 
-use Elandlord\NatsPhp\Connection\NatsConnection;
 use Elandlord\NatsPhpBundle\Connection\NatsConnectionFactory;
 use Symfony\Component\Messenger\Transport\TransportFactoryInterface;
 use Symfony\Component\Messenger\Transport\TransportInterface;
@@ -21,6 +20,7 @@ class NatsTransportFactory implements TransportFactoryInterface
      */
     public function __construct(
         protected readonly NatsConnectionFactory $connectionFactory,
+        protected readonly NatsReceiverRegistry  $receiverRegistry,
         protected readonly array                 $eventMap = []
     )
     {
@@ -48,47 +48,15 @@ class NatsTransportFactory implements TransportFactoryInterface
             throw new TransportException('Options "stream" and "consumer" are required for NATS Messenger transport.');
         }
 
-        $connection = $this->connectionFactory->create();
-
-        $sender = $this->createSender($connection, $serializer, $stream, $subjectPrefix);
-        $receiver = $this->createReceiver($connection, $serializer, $stream, $consumer);
-
-        return new NatsTransport($sender, $receiver);
-    }
-
-    protected function createSender(
-        NatsConnection      $connection,
-        SerializerInterface $serializer,
-        string              $stream,
-        ?string             $subjectPrefix = null
-    ): NatsTransportSender
-    {
-        return new NatsTransportSender(
-            connection: $connection,
-            serializer: $serializer,
-            stream: $stream,
-            subjectPrefix: $subjectPrefix
-        );
-    }
-
-    protected function createReceiver(
-        NatsConnection      $connection,
-        SerializerInterface $serializer,
-        string              $stream,
-        string              $consumer
-
-    ): NatsTransportReceiver
-    {
-        return new NatsTransportReceiver(
-            connection: $connection,
-            serializer: $serializer,
-            stream: $stream,
-            consumer: $consumer,
-            subjectFilter: $options['subject_filter'] ?? null,
-            maxDeliver: (int)($options['max_deliver'] ?? NatsTransportReceiver::DEFAULT_MAX_DELIVER),
-            ackWaitMs: (int)($options['ack_wait_ms'] ?? NatsTransportReceiver::DEFAULT_ACK_WAIT_MS),
-            timeoutMs: (int)($options['timeout_ms'] ?? NatsTransportReceiver::DEFAULT_TIMEOUT_MS),
-            eventMap: $this->eventMap
+        return new NatsTransport(
+            $this->connectionFactory,
+            $this->receiverRegistry,
+            $serializer,
+            $stream,
+            $consumer,
+            $subjectPrefix,
+            $options,
+            $this->eventMap
         );
     }
 
