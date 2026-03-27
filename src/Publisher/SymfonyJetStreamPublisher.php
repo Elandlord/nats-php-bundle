@@ -7,10 +7,8 @@ use CloudEvents\Exceptions\UnsupportedSpecVersionException;
 use CloudEvents\Serializers\JsonSerializer;
 use CloudEvents\V1\CloudEventInterface;
 use Elandlord\NatsPhp\Contract\Model\SubjectPublisherInterface;
-use Elandlord\NatsPhp\Messaging\EventEnvelope;
 use Elandlord\NatsPhp\Publisher\JetStreamPublisher;
 use Elandlord\NatsPhpBundle\Connection\NatsConnectionFactory;
-use JsonException;
 
 /**
  * @copyright    2025, Eric Landheer
@@ -18,20 +16,21 @@ use JsonException;
  */
 class SymfonyJetStreamPublisher implements SubjectPublisherInterface
 {
-    protected JetStreamPublisher $publisher;
-
     public function __construct(
-        NatsConnectionFactory $connectionFactory,
+        protected NatsConnectionFactory $connectionFactory,
         protected string $streamName,
         protected string $subjectPrefix = ''
     ) {
-        $connection = $connectionFactory->create();
-        $this->publisher = new JetStreamPublisher($connection, $this->streamName);
     }
 
     public function publish(string $subject, string $payload): void
     {
-        $this->publisher->publish($subject, $payload);
+        $this->createPublisher()->publish($subject, $payload);
+    }
+
+    public function publishFireAndForget(string $subject, string $payload): void
+    {
+        $this->createPublisher()->publishFireAndForget($subject, $payload);
     }
 
     /**
@@ -43,5 +42,12 @@ class SymfonyJetStreamPublisher implements SubjectPublisherInterface
         $subject = $eventDto->getType();
 
         $this->publish($subject, $payload);
+    }
+
+    protected function createPublisher(): JetStreamPublisher
+    {
+        $connection = $this->connectionFactory->create();
+
+        return new JetStreamPublisher($connection, $this->streamName);
     }
 }
