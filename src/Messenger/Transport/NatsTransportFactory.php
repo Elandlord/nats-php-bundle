@@ -22,7 +22,7 @@ class NatsTransportFactory implements TransportFactoryInterface
         protected readonly NatsConnectionFactory $connectionFactory,
         protected readonly NatsReceiverRegistry  $receiverRegistry,
         protected readonly array                 $eventMap = []
-    ) 
+    )
     {
     }
 
