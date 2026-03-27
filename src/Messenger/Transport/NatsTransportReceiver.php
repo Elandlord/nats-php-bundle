@@ -6,6 +6,7 @@ namespace Elandlord\NatsPhpBundle\Messenger\Transport;
 
 use Basis\Nats\Consumer\Consumer;
 use Basis\Nats\Message\Msg;
+use Basis\Nats\Queue;
 use CloudEvents\Exceptions\InvalidPayloadSyntaxException;
 use CloudEvents\Exceptions\MissingAttributeException;
 use CloudEvents\Exceptions\UnsupportedSpecVersionException;
@@ -38,6 +39,7 @@ class NatsTransportReceiver implements ReceiverInterface
     public const DEFAULT_ACK_WAIT_MS = 10_000;
 
     private ?DenormalizerInterface $denormalizer = null;
+    protected ?Queue $queue = null;
 
     /**
      * @var array<string, class-string> $eventMap
@@ -59,10 +61,7 @@ class NatsTransportReceiver implements ReceiverInterface
      */
     public function get(): iterable
     {
-        $consumer = $this->getOrCreateConsumer();
-        $queue = $consumer->getQueue();
-
-        $message = $queue->next($this->timeoutMs);
+        $message = $this->getOrCreateQueue()->next($this->timeoutMs);
 
         if (!$this->shouldProcess($message)) {
             return;
@@ -192,6 +191,21 @@ class NatsTransportReceiver implements ReceiverInterface
         if ($message->replyTo !== null) {
             $message->nack(1.0);
         }
+    }
+
+    public function unsubscribe(): void
+    {
+        if ($this->queue !== null) {
+            $this->connection->getClient()->unsubscribe($this->queue);
+        }
+    }
+
+    protected function getOrCreateQueue(): Queue
+    {
+        if ($this->queue === null) {
+            $this->queue = $this->getOrCreateConsumer()->getQueue();
+        }
+        return $this->queue;
     }
 
     protected function getOrCreateConsumer(): Consumer

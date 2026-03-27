@@ -35,8 +35,14 @@ services:
     tags:
       - { name: 'console.command' }
 
+  Elandlord\NatsPhpBundle\Messenger\Transport\NatsReceiverRegistry: ~
+
   Elandlord\NatsPhpBundle\Messenger\Transport\NatsTransportFactory:
     arguments:
       $eventMap: '%nats_php.event_map%'
     tags:
       - { name: 'messenger.transport_factory' }
+
+  Elandlord\NatsPhpBundle\EventListener\WorkerStoppedListener:
+    tags:
+      - { name: 'kernel.event_subscriber' }
