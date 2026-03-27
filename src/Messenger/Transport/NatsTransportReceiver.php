@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Elandlord\NatsPhpBundle\Messenger\Transport;
@@ -17,6 +18,14 @@ use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\Exception\TransportException;
 use Symfony\Component\Messenger\Transport\Receiver\ReceiverInterface;
 use Symfony\Component\Messenger\Transport\Serialization\SerializerInterface;
+use Symfony\Component\PropertyInfo\Extractor\PhpDocExtractor;
+use Symfony\Component\PropertyInfo\Extractor\ReflectionExtractor;
+use Symfony\Component\PropertyInfo\PropertyInfoExtractor;
+use Symfony\Component\Serializer\Encoder\JsonEncoder;
+use Symfony\Component\Serializer\Normalizer\ArrayDenormalizer;
+use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
+use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
+use Symfony\Component\Serializer\Serializer;
 use Throwable;
 
 /**
@@ -44,10 +53,8 @@ class NatsTransportReceiver implements ReceiverInterface
         protected readonly int                 $ackWaitMs = self::DEFAULT_ACK_WAIT_MS,
         protected readonly int                 $timeoutMs = self::DEFAULT_TIMEOUT_MS,
         protected readonly array               $eventMap = [],
-    )
-    {
-
-    }
+        protected ?DenormalizerInterface       $denormalizer = null,
+    ) {}
 
     /**
      * @throws Throwable
@@ -108,10 +115,11 @@ class NatsTransportReceiver implements ReceiverInterface
     protected function hydrateMessage(string $messageClass, array $body): object
     {
         try {
-            return new $messageClass(...$body);
+            return $this->getDenormalizer()->denormalize($body, $messageClass);
         } catch (Throwable $exception) {
             throw new TransportException(
-                sprintf('Failed to hydrate "%s" from NATS body keys [%s].',
+                sprintf(
+                    'Failed to hydrate "%s" from NATS body keys [%s].',
                     $messageClass,
                     implode(', ', array_keys($body))
                 ),
@@ -119,6 +127,30 @@ class NatsTransportReceiver implements ReceiverInterface
                 $exception
             );
         }
+    }
+
+    private function getDenormalizer(): DenormalizerInterface
+    {
+        if ($this->denormalizer === null) {
+            $phpDocExtractor = new PhpDocExtractor();
+            $reflectionExtractor = new ReflectionExtractor();
+
+            $propertyTypeExtractor = new PropertyInfoExtractor(
+                typeExtractors: [$phpDocExtractor, $reflectionExtractor],
+            );
+
+            $this->denormalizer = new Serializer(
+                normalizers: [
+                    new ArrayDenormalizer(),
+                    new ObjectNormalizer(propertyTypeExtractor: $propertyTypeExtractor),
+                ],
+                encoders: [
+                    new JsonEncoder()
+                ]
+            );
+        }
+
+        return $this->denormalizer;
     }
 
     protected function onProcessingError(Throwable $exception, Msg $message): void
