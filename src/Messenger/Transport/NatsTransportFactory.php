@@ -1,5 +1,4 @@
 <?php
-
 declare(strict_types=1);
 
 namespace Elandlord\NatsPhpBundle\Messenger\Transport;
@@ -23,7 +22,9 @@ class NatsTransportFactory implements TransportFactoryInterface
         protected readonly NatsConnectionFactory $connectionFactory,
         protected readonly NatsReceiverRegistry  $receiverRegistry,
         protected readonly array                 $eventMap = []
-    ) {}
+    ) 
+    {
+    }
 
     public function supports(string $dsn, array $options): bool
     {
