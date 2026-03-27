@@ -38,7 +38,6 @@ class NatsTransportReceiver implements ReceiverInterface
     public const DEFAULT_MAX_DELIVER = 3;
     public const DEFAULT_ACK_WAIT_MS = 10_000;
 
-    private ?DenormalizerInterface $denormalizer = null;
     protected ?Queue $queue = null;
 
     /**
@@ -54,6 +53,7 @@ class NatsTransportReceiver implements ReceiverInterface
         protected readonly int                 $ackWaitMs = self::DEFAULT_ACK_WAIT_MS,
         protected readonly int                 $timeoutMs = self::DEFAULT_TIMEOUT_MS,
         protected readonly array               $eventMap = [],
+        protected ?DenormalizerInterface       $denormalizer = null,
     ) {}
 
     /**
