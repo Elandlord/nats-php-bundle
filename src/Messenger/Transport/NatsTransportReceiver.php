@@ -116,7 +116,7 @@ class NatsTransportReceiver implements ReceiverInterface
     protected function hydrateMessage(string $messageClass, array $body): object
     {
         try {
-            return $this->getDenormalizer()->denormalize($body, $messageClass, JsonEncoder::FORMAT);
+            return $this->getDenormalizer()->denormalize($body, $messageClass);
         } catch (Throwable $exception) {
             throw new TransportException(
                 sprintf(
@@ -140,10 +140,15 @@ class NatsTransportReceiver implements ReceiverInterface
                 typeExtractors: [$phpDocExtractor, $reflectionExtractor],
             );
 
-            $this->denormalizer = new Serializer([
-                new ArrayDenormalizer(),
-                new ObjectNormalizer(propertyTypeExtractor: $propertyTypeExtractor),
-            ]);
+            $this->denormalizer = new Serializer(
+                normalizers: [
+                    new ArrayDenormalizer(),
+                    new ObjectNormalizer(propertyTypeExtractor: $propertyTypeExtractor),
+                ],
+                encoders: [
+                    new JsonEncoder()
+                ]
+            );
         }
 
         return $this->denormalizer;
