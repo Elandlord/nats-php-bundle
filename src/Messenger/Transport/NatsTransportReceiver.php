@@ -5,6 +5,7 @@ namespace Elandlord\NatsPhpBundle\Messenger\Transport;
 
 use Basis\Nats\Consumer\Consumer;
 use Basis\Nats\Message\Msg;
+use Basis\Nats\Queue;
 use CloudEvents\Exceptions\InvalidPayloadSyntaxException;
 use CloudEvents\Exceptions\MissingAttributeException;
 use CloudEvents\Exceptions\UnsupportedSpecVersionException;
@@ -28,6 +29,8 @@ class NatsTransportReceiver implements ReceiverInterface
     public const DEFAULT_MAX_DELIVER = 3;
     public const DEFAULT_ACK_WAIT_MS = 10_000;
 
+    protected Queue $queue;
+
     /**
      * @var array<string, class-string> $eventMap
      */
@@ -43,6 +46,7 @@ class NatsTransportReceiver implements ReceiverInterface
         protected readonly array               $eventMap = [],
     )
     {
+        $this->queue = $this->getOrCreateConsumer()->getQueue();
     }
 
     /**
@@ -50,10 +54,7 @@ class NatsTransportReceiver implements ReceiverInterface
      */
     public function get(): iterable
     {
-        $consumer = $this->getOrCreateConsumer();
-        $queue = $consumer->getQueue();
-
-        $message = $queue->next($this->timeoutMs);
+        $message = $this->queue->next($this->timeoutMs);
 
         if (!$this->shouldProcess($message)) {
             return;
