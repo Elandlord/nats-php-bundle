@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "8dc90a377f6cad495aef5cc060e67392",
+    "content-hash": "2b4f171fdd33d02b06f0f41497e346c1",
     "packages": [
         {
             "name": "basis-company/nats",
@@ -180,16 +180,16 @@
         },
         {
             "name": "elandlord/nats-php",
-            "version": "v1.1.0",
+            "version": "v1.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/Elandlord/nats-php.git",
-                "reference": "9768c65e929c7e6ddf3a3f186dac053dfc46b32a"
+                "reference": "56ba3cf61a3adfac9f7a91f3a54639d3845056c9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Elandlord/nats-php/zipball/9768c65e929c7e6ddf3a3f186dac053dfc46b32a",
-                "reference": "9768c65e929c7e6ddf3a3f186dac053dfc46b32a",
+                "url": "https://api.github.com/repos/Elandlord/nats-php/zipball/56ba3cf61a3adfac9f7a91f3a54639d3845056c9",
+                "reference": "56ba3cf61a3adfac9f7a91f3a54639d3845056c9",
                 "shasum": ""
             },
             "require": {
@@ -216,9 +216,9 @@
             "description": "A lightweight, framework-agnostic PHP abstraction layer for NATS and JetStream. Includes publishers, consumers, message envelopes, and handler interfaces built on top of basis-company/nats.",
             "support": {
                 "issues": "https://github.com/Elandlord/nats-php/issues",
-                "source": "https://github.com/Elandlord/nats-php/tree/v1.1.0"
+                "source": "https://github.com/Elandlord/nats-php/tree/v1.2.0"
             },
-            "time": "2025-11-26T16:08:17+00:00"
+            "time": "2026-03-27T07:40:02+00:00"
         },
         {
             "name": "phpdocumentor/reflection-common",
@@ -2774,33 +2774,37 @@
         },
         {
             "name": "symfony/property-info",
-            "version": "v8.0.7",
+            "version": "v7.4.7",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/property-info.git",
-                "reference": "e1a6b5d10ee3455ae698c4a3f4ef580b78af27ba"
+                "reference": "02501d75fd834345da3ecdd8e3200ced39e370f8"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/property-info/zipball/e1a6b5d10ee3455ae698c4a3f4ef580b78af27ba",
-                "reference": "e1a6b5d10ee3455ae698c4a3f4ef580b78af27ba",
+                "url": "https://api.github.com/repos/symfony/property-info/zipball/02501d75fd834345da3ecdd8e3200ced39e370f8",
+                "reference": "02501d75fd834345da3ecdd8e3200ced39e370f8",
                 "shasum": ""
             },
             "require": {
-                "php": ">=8.4",
-                "symfony/string": "^7.4|^8.0",
+                "php": ">=8.2",
+                "symfony/deprecation-contracts": "^2.5|^3",
+                "symfony/string": "^6.4|^7.0|^8.0",
                 "symfony/type-info": "^7.4.7|^8.0.7"
             },
             "conflict": {
                 "phpdocumentor/reflection-docblock": "<5.2|>=7",
-                "phpdocumentor/type-resolver": "<1.5.1"
+                "phpdocumentor/type-resolver": "<1.5.1",
+                "symfony/cache": "<6.4",
+                "symfony/dependency-injection": "<6.4",
+                "symfony/serializer": "<6.4"
             },
             "require-dev": {
                 "phpdocumentor/reflection-docblock": "^5.2|^6.0",
                 "phpstan/phpdoc-parser": "^1.0|^2.0",
-                "symfony/cache": "^7.4|^8.0",
-                "symfony/dependency-injection": "^7.4|^8.0",
-                "symfony/serializer": "^7.4|^8.0"
+                "symfony/cache": "^6.4|^7.0|^8.0",
+                "symfony/dependency-injection": "^6.4|^7.0|^8.0",
+                "symfony/serializer": "^6.4|^7.0|^8.0"
             },
             "type": "library",
             "autoload": {
@@ -2836,7 +2840,7 @@
                 "validator"
             ],
             "support": {
-                "source": "https://github.com/symfony/property-info/tree/v8.0.7"
+                "source": "https://github.com/symfony/property-info/tree/v7.4.7"
             },
             "funding": [
                 {
@@ -2856,7 +2860,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-03-04T15:54:04+00:00"
+            "time": "2026-03-04T15:53:26+00:00"
         },
         {
             "name": "symfony/routing",
