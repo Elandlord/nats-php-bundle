@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "2b4f171fdd33d02b06f0f41497e346c1",
+    "content-hash": "0af00d8e006efb866c4b97a2acf59af8",
     "packages": [
         {
             "name": "basis-company/nats",
