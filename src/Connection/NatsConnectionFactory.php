@@ -39,6 +39,7 @@ class NatsConnectionFactory
             'pass' => $this->config->getPass(),
             'reconnect' => $this->config->getReconnect(),
             'pedantic' => $this->config->getPedantic(),
+            'timeout' => $this->config->getTimeout(),
         ];
     }
 

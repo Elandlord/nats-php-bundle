@@ -27,6 +27,7 @@ class Configuration implements ConfigurationInterface
                 ->booleanNode('reconnect')->defaultTrue()->end()
                 ->booleanNode('pedantic')->defaultFalse()->end()
                 ->floatNode('delay')->defaultValue(0.01)->end()
+                ->floatNode('timeout')->defaultValue(5.0)->end()
 
                 // TLS options
                 ->scalarNode('tls_ca_file')->defaultNull()->end()

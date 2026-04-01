@@ -51,6 +51,11 @@ class NatsConfig
         return (float)($this->config['delay'] ?? 0.01);
     }
 
+    public function getTimeout(): float
+    {
+        return (float)($this->config['timeout'] ?? 5.0);
+    }
+
     public function getTlsCaFile(): ?string
     {
         $ca = $this->config['tls_ca_file'] ?? null;
