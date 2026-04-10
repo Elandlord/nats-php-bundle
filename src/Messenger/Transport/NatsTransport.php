@@ -35,7 +35,7 @@ class NatsTransport implements TransportInterface
         protected array                          $options,
         protected readonly array                    $eventMap,
         protected readonly ?LoggerInterface         $logger = null,
-        protected readonly UnmappedEventStrategy    $unmappedEventStrategy = UnmappedEventStrategy::Ack,
+        protected readonly UnmappedEventStrategy    $unmappedEventStrategy = UnmappedEventStrategy::ACK,
     )
     {
 

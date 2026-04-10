@@ -52,7 +52,7 @@ class NatsTransportFactory implements TransportFactoryInterface
 
         $unmappedEventStrategy = UnmappedEventStrategy::tryFrom(
             $options['unmapped_event_strategy'] ?? ''
-        ) ?? UnmappedEventStrategy::Ack;
+        ) ?? UnmappedEventStrategy::ACK;
 
         return new NatsTransport(
             $this->connectionFactory,

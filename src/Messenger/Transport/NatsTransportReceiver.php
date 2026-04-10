@@ -56,7 +56,7 @@ class NatsTransportReceiver implements ReceiverInterface
         protected readonly array                    $eventMap = [],
         protected ?DenormalizerInterface              $denormalizer = null,
         protected readonly ?LoggerInterface           $logger = null,
-        protected readonly UnmappedEventStrategy      $unmappedEventStrategy = UnmappedEventStrategy::Ack,
+        protected readonly UnmappedEventStrategy      $unmappedEventStrategy = UnmappedEventStrategy::ACK,
     ) {}
 
     /**
@@ -77,7 +77,7 @@ class NatsTransportReceiver implements ReceiverInterface
             throw $exception;
         }
 
-        if ($envelope === null && $this->unmappedEventStrategy === UnmappedEventStrategy::Ack) {
+        if ($envelope === null) {
             $this->logger?->warning('No handler registered for NATS event, acking and skipping.', [
                 'subject' => $message->subject,
             ]);
@@ -105,7 +105,7 @@ class NatsTransportReceiver implements ReceiverInterface
         $messageClass = $this->eventMap[$cloudEvent->getType()] ?? null;
 
         if ($messageClass === null) {
-            return $this->unmappedEventStrategy === UnmappedEventStrategy::PassThrough
+            return $this->unmappedEventStrategy === UnmappedEventStrategy::PASSTHROUGH
                 ? new Envelope($cloudEvent)
                 : null;
         }
