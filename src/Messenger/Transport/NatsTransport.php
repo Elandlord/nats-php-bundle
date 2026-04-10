@@ -6,6 +6,7 @@ namespace Elandlord\NatsPhpBundle\Messenger\Transport;
 use CloudEvents\Exceptions\UnsupportedSpecVersionException;
 use Elandlord\NatsPhp\Connection\NatsConnection;
 use Elandlord\NatsPhpBundle\Connection\NatsConnectionFactory;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\Transport\Serialization\SerializerInterface;
 use Symfony\Component\Messenger\Transport\TransportInterface;
@@ -32,7 +33,9 @@ class NatsTransport implements TransportInterface
         protected string                         $consumer,
         protected ?string                        $subjectPrefix,
         protected array                          $options,
-        protected readonly array                 $eventMap
+        protected readonly array                    $eventMap,
+        protected readonly ?LoggerInterface         $logger = null,
+        protected readonly UnmappedEventStrategy    $unmappedEventStrategy = UnmappedEventStrategy::Ack,
     )
     {
 
@@ -96,7 +99,9 @@ class NatsTransport implements TransportInterface
             maxDeliver: (int)($this->options['max_deliver'] ?? NatsTransportReceiver::DEFAULT_MAX_DELIVER),
             ackWaitMs: (int)($this->options['ack_wait_ms'] ?? NatsTransportReceiver::DEFAULT_ACK_WAIT_MS),
             timeoutMs: (int)($this->options['timeout_ms'] ?? NatsTransportReceiver::DEFAULT_TIMEOUT_MS),
-            eventMap: $this->eventMap
+            eventMap: $this->eventMap,
+            logger: $this->logger,
+            unmappedEventStrategy: $this->unmappedEventStrategy,
         );
         $this->receiverRegistry->register($receiver);
         return $receiver;

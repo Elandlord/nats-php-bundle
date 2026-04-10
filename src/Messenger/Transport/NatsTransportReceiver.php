@@ -14,6 +14,7 @@ use CloudEvents\Serializers\JsonDeserializer;
 use CloudEvents\V1\CloudEventInterface;
 use Elandlord\NatsPhp\Connection\NatsConnection;
 use Elandlord\NatsPhpBundle\Messenger\Stamp\NatsReceivedStamp;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\Exception\TransportException;
 use Symfony\Component\Messenger\Transport\Receiver\ReceiverInterface;
@@ -52,8 +53,10 @@ class NatsTransportReceiver implements ReceiverInterface
         protected readonly int                 $maxDeliver = self::DEFAULT_MAX_DELIVER,
         protected readonly int                 $ackWaitMs = self::DEFAULT_ACK_WAIT_MS,
         protected readonly int                 $timeoutMs = self::DEFAULT_TIMEOUT_MS,
-        protected readonly array               $eventMap = [],
-        protected ?DenormalizerInterface       $denormalizer = null,
+        protected readonly array                    $eventMap = [],
+        protected ?DenormalizerInterface              $denormalizer = null,
+        protected readonly ?LoggerInterface           $logger = null,
+        protected readonly UnmappedEventStrategy      $unmappedEventStrategy = UnmappedEventStrategy::Ack,
     ) {}
 
     /**
@@ -74,7 +77,10 @@ class NatsTransportReceiver implements ReceiverInterface
             throw $exception;
         }
 
-        if ($envelope === null) {
+        if ($envelope === null && $this->unmappedEventStrategy === UnmappedEventStrategy::Ack) {
+            $this->logger?->warning('No handler registered for NATS event, acking and skipping.', [
+                'subject' => $message->subject,
+            ]);
             $message->ack();
             return;
         }
@@ -99,7 +105,9 @@ class NatsTransportReceiver implements ReceiverInterface
         $messageClass = $this->eventMap[$cloudEvent->getType()] ?? null;
 
         if ($messageClass === null) {
-            return null;
+            return $this->unmappedEventStrategy === UnmappedEventStrategy::PassThrough
+                ? new Envelope($cloudEvent)
+                : null;
         }
 
         $data = $cloudEvent->getData();
