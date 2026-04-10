@@ -74,6 +74,11 @@ class NatsTransportReceiver implements ReceiverInterface
             throw $exception;
         }
 
+        if ($envelope === null) {
+            $message->ack();
+            return;
+        }
+
         $envelope = $envelope->with(new NatsReceivedStamp($message));
         yield $envelope;
     }
@@ -83,7 +88,7 @@ class NatsTransportReceiver implements ReceiverInterface
      * @throws UnsupportedSpecVersionException
      * @throws MissingAttributeException
      */
-    protected function buildEnvelopeFromMessage(Msg $message): Envelope
+    protected function buildEnvelopeFromMessage(Msg $message): ?Envelope
     {
         $cloudEvent = JsonDeserializer::create()->deserializeStructured($message->payload->body);
 
@@ -93,23 +98,23 @@ class NatsTransportReceiver implements ReceiverInterface
 
         $messageClass = $this->eventMap[$cloudEvent->getType()] ?? null;
 
-        if ($messageClass) {
-            $data = $cloudEvent->getData();
-
-            if (!is_array($data)) {
-                $data = (array) $data;
-            }
-
-            $data = array_merge([
-                'source' => $cloudEvent->getSource(),
-            ], $data);
-
-            $dto = $this->hydrateMessage($messageClass, $data);
-
-            return new Envelope($dto);
+        if ($messageClass === null) {
+            return null;
         }
 
-        return new Envelope($cloudEvent);
+        $data = $cloudEvent->getData();
+
+        if (!is_array($data)) {
+            $data = (array) $data;
+        }
+
+        $data = array_merge([
+            'source' => $cloudEvent->getSource(),
+        ], $data);
+
+        $dto = $this->hydrateMessage($messageClass, $data);
+
+        return new Envelope($dto);
     }
 
     protected function hydrateMessage(string $messageClass, array $body): object
