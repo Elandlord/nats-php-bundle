@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Elandlord\NatsPhpBundle\Messenger\Transport;
 
 use Elandlord\NatsPhpBundle\Connection\NatsConnectionFactory;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\Messenger\Transport\TransportFactoryInterface;
 use Symfony\Component\Messenger\Transport\TransportInterface;
 use Symfony\Component\Messenger\Transport\Serialization\SerializerInterface;
@@ -21,7 +22,8 @@ class NatsTransportFactory implements TransportFactoryInterface
     public function __construct(
         protected readonly NatsConnectionFactory $connectionFactory,
         protected readonly NatsReceiverRegistry  $receiverRegistry,
-        protected readonly array                 $eventMap = []
+        protected readonly array                 $eventMap = [],
+        protected readonly ?LoggerInterface      $logger = null,
     )
     {
     }
@@ -48,6 +50,10 @@ class NatsTransportFactory implements TransportFactoryInterface
             throw new TransportException('Options "stream" and "consumer" are required for NATS Messenger transport.');
         }
 
+        $unmappedEventStrategy = UnmappedEventStrategy::tryFrom(
+            $options['unmapped_event_strategy'] ?? ''
+        ) ?? UnmappedEventStrategy::ACK;
+
         return new NatsTransport(
             $this->connectionFactory,
             $this->receiverRegistry,
@@ -56,7 +62,9 @@ class NatsTransportFactory implements TransportFactoryInterface
             $consumer,
             $subjectPrefix,
             $options,
-            $this->eventMap
+            $this->eventMap,
+            $this->logger,
+            $unmappedEventStrategy,
         );
     }
 

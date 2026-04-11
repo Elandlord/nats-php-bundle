@@ -14,6 +14,7 @@ use CloudEvents\Serializers\JsonDeserializer;
 use CloudEvents\V1\CloudEventInterface;
 use Elandlord\NatsPhp\Connection\NatsConnection;
 use Elandlord\NatsPhpBundle\Messenger\Stamp\NatsReceivedStamp;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\Exception\TransportException;
 use Symfony\Component\Messenger\Transport\Receiver\ReceiverInterface;
@@ -52,8 +53,10 @@ class NatsTransportReceiver implements ReceiverInterface
         protected readonly int                 $maxDeliver = self::DEFAULT_MAX_DELIVER,
         protected readonly int                 $ackWaitMs = self::DEFAULT_ACK_WAIT_MS,
         protected readonly int                 $timeoutMs = self::DEFAULT_TIMEOUT_MS,
-        protected readonly array               $eventMap = [],
-        protected ?DenormalizerInterface       $denormalizer = null,
+        protected readonly array                    $eventMap = [],
+        protected ?DenormalizerInterface              $denormalizer = null,
+        protected readonly ?LoggerInterface           $logger = null,
+        protected readonly UnmappedEventStrategy      $unmappedEventStrategy = UnmappedEventStrategy::ACK,
     ) {}
 
     /**
@@ -74,6 +77,14 @@ class NatsTransportReceiver implements ReceiverInterface
             throw $exception;
         }
 
+        if ($envelope === null) {
+            $this->logger?->warning('No handler registered for NATS event, acking and skipping.', [
+                'subject' => $message->subject,
+            ]);
+            $message->ack();
+            return;
+        }
+
         $envelope = $envelope->with(new NatsReceivedStamp($message));
         yield $envelope;
     }
@@ -83,7 +94,7 @@ class NatsTransportReceiver implements ReceiverInterface
      * @throws UnsupportedSpecVersionException
      * @throws MissingAttributeException
      */
-    protected function buildEnvelopeFromMessage(Msg $message): Envelope
+    protected function buildEnvelopeFromMessage(Msg $message): ?Envelope
     {
         $cloudEvent = JsonDeserializer::create()->deserializeStructured($message->payload->body);
 
@@ -93,23 +104,25 @@ class NatsTransportReceiver implements ReceiverInterface
 
         $messageClass = $this->eventMap[$cloudEvent->getType()] ?? null;
 
-        if ($messageClass) {
-            $data = $cloudEvent->getData();
-
-            if (!is_array($data)) {
-                $data = (array) $data;
-            }
-
-            $data = array_merge([
-                'source' => $cloudEvent->getSource(),
-            ], $data);
-
-            $dto = $this->hydrateMessage($messageClass, $data);
-
-            return new Envelope($dto);
+        if ($messageClass === null) {
+            return $this->unmappedEventStrategy === UnmappedEventStrategy::PASSTHROUGH
+                ? new Envelope($cloudEvent)
+                : null;
         }
 
-        return new Envelope($cloudEvent);
+        $data = $cloudEvent->getData();
+
+        if (!is_array($data)) {
+            $data = (array) $data;
+        }
+
+        $data = array_merge([
+            'source' => $cloudEvent->getSource(),
+        ], $data);
+
+        $dto = $this->hydrateMessage($messageClass, $data);
+
+        return new Envelope($dto);
     }
 
     protected function hydrateMessage(string $messageClass, array $body): object
