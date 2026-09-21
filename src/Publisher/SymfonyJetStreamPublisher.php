@@ -16,6 +16,8 @@ use Elandlord\NatsPhpBundle\Connection\NatsConnectionFactory;
  */
 class SymfonyJetStreamPublisher implements SubjectPublisherInterface
 {
+    protected ?JetStreamPublisher $publisher = null;
+
     public function __construct(
         protected NatsConnectionFactory $connectionFactory,
         protected string $streamName,
@@ -25,12 +27,12 @@ class SymfonyJetStreamPublisher implements SubjectPublisherInterface
 
     public function publish(string $subject, string $payload): void
     {
-        $this->createPublisher()->publish($subject, $payload);
+        $this->getPublisher()->publish($subject, $payload);
     }
 
     public function publishFireAndForget(string $subject, string $payload): void
     {
-        $this->createPublisher()->publishFireAndForget($subject, $payload);
+        $this->getPublisher()->publishFireAndForget($subject, $payload);
     }
 
     /**
@@ -42,6 +44,11 @@ class SymfonyJetStreamPublisher implements SubjectPublisherInterface
         $subject = $eventDto->getType();
 
         $this->publish($subject, $payload);
+    }
+
+    protected function getPublisher(): JetStreamPublisher
+    {
+        return $this->publisher ??= $this->createPublisher();
     }
 
     protected function createPublisher(): JetStreamPublisher
