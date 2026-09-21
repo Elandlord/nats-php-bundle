@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "0af00d8e006efb866c4b97a2acf59af8",
+    "content-hash": "9e1ac117a243b8d9a63ff5f1cac5e3cc",
     "packages": [
         {
             "name": "basis-company/nats",
@@ -180,16 +180,16 @@
         },
         {
             "name": "elandlord/nats-php",
-            "version": "v1.2.0",
+            "version": "v1.2.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/Elandlord/nats-php.git",
-                "reference": "56ba3cf61a3adfac9f7a91f3a54639d3845056c9"
+                "reference": "9e1ca0afa77304cb3ddac4cfb4b63253c9254b55"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Elandlord/nats-php/zipball/56ba3cf61a3adfac9f7a91f3a54639d3845056c9",
-                "reference": "56ba3cf61a3adfac9f7a91f3a54639d3845056c9",
+                "url": "https://api.github.com/repos/Elandlord/nats-php/zipball/9e1ca0afa77304cb3ddac4cfb4b63253c9254b55",
+                "reference": "9e1ca0afa77304cb3ddac4cfb4b63253c9254b55",
                 "shasum": ""
             },
             "require": {
@@ -216,9 +216,9 @@
             "description": "A lightweight, framework-agnostic PHP abstraction layer for NATS and JetStream. Includes publishers, consumers, message envelopes, and handler interfaces built on top of basis-company/nats.",
             "support": {
                 "issues": "https://github.com/Elandlord/nats-php/issues",
-                "source": "https://github.com/Elandlord/nats-php/tree/v1.2.0"
+                "source": "https://github.com/Elandlord/nats-php/tree/v1.2.1"
             },
-            "time": "2026-03-27T07:40:02+00:00"
+            "time": "2026-09-21T08:12:07+00:00"
         },
         {
             "name": "phpdocumentor/reflection-common",
