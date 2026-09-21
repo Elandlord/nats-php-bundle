@@ -39,6 +39,7 @@ class NatsTransportReceiver implements ReceiverInterface
     public const DEFAULT_TIMEOUT_MS = 1000;
     public const DEFAULT_MAX_DELIVER = 3;
     public const DEFAULT_ACK_WAIT_MS = 10_000;
+    protected const NANOSECONDS_PER_MILLISECOND = 1_000_000;
 
     protected ?Queue $queue = null;
 
@@ -232,8 +233,32 @@ class NatsTransportReceiver implements ReceiverInterface
         }
 
         $config->setMaxDeliver($this->maxDeliver);
-        $config->setAckWait($this->ackWaitMs);
+        $config->setAckWait($this->ackWaitMs * self::NANOSECONDS_PER_MILLISECOND);
+
+        if ($consumer->exists() && $this->hasConfigurationDrift($consumer)) {
+            $this->updateConsumer($consumer);
+
+            return $consumer;
+        }
 
         return $consumer->create();
+    }
+
+    protected function hasConfigurationDrift(Consumer $consumer): bool
+    {
+        $live = $consumer->info()->config;
+        $desired = $consumer->getConfiguration()->toArray()['config'];
+
+        return ($live->ack_wait ?? null) !== ($desired['ack_wait'] ?? null)
+            || ($live->max_deliver ?? null) !== ($desired['max_deliver'] ?? null)
+            || ($live->filter_subject ?? null) !== ($desired['filter_subject'] ?? null);
+    }
+
+    protected function updateConsumer(Consumer $consumer): void
+    {
+        $consumer->client->api(
+            sprintf('CONSUMER.DURABLE.CREATE.%s.%s', $consumer->getStream(), $consumer->getName()),
+            $consumer->getConfiguration()->toArray(),
+        );
     }
 }
